@@ -1,0 +1,10 @@
+doc/
+node_modules/
+coverage/
+bin/
+v8.log
+
+include/
+obj/
+*.cpp
+*.n

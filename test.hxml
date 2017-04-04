@@ -1,0 +1,8 @@
+-cp src
+-cp test
+-main TestAll
+-lib unifill
+-lib utest
+-lib buddy
+-debug
+#-neko bin\testall.n

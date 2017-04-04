@@ -1,0 +1,6 @@
+-cp src
+-main Main
+-lib unifill
+#-lib utest
+#-debug
+#-neko main.n

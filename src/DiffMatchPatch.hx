@@ -79,7 +79,7 @@ class DiffMatchPatch {
    *     instead.
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    */
-  function diff_main(text1, text2, ?opt_checklines, ?opt_deadline) {
+  function diff_main(text1:SString, text2:SString, ?opt_checklines, ?opt_deadline) {
     // Set a deadline by which time the diff must be complete.
     if (opt_deadline == null) {
       if (this.Diff_Timeout <= 0) {
@@ -97,9 +97,10 @@ class DiffMatchPatch {
     }
 
     // Check for equality (speedup).
+    //NOTE(hx): why equality and then check for falsey?
     if (text1 == text2) {
-      if (text1) {
-        return [[DIFF_EQUAL, text1]];
+      if (text1 != null) {
+        return ([[DIFF_EQUAL, text1]] : Diff);
       }
       return [];
     }
@@ -148,15 +149,16 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @private
    */
-  function diff_compute_(text1, text2, checklines, deadline) {
+  function diff_compute_(text1:SString, text2:SString, checklines, deadline) {
     var diffs;
 
-    if (!text1) {
+    //NOTE(hx): more falsey values
+    if (text1 != null) {
       // Just add some text (speedup).
-      return [[DIFF_INSERT, text2]];
+      return ([[DIFF_INSERT, text2]] : Diff);
     }
 
-    if (!text2) {
+    if (text2 != null) {
       // Just delete some text (speedup).
       return [[DIFF_DELETE, text1]];
     }
@@ -529,15 +531,15 @@ class DiffMatchPatch {
    * @return {number} The number of characters common to the start of each
    *     string.
    */
-  function diff_commonPrefix(text1, text2) {
+  function diff_commonPrefix(text1:SString, text2:SString):Int {
     // Quick check for common null cases.
-    if (!text1 || !text2 || text1.charAt(0) != text2.charAt(0)) {
+    if (text1 == null || text2 == null || text1.charAt(0) != text2.charAt(0)) {
       return 0;
     }
     // Binary search.
     // Performance analysis: http://neil.fraser.name/news/2007/10/09/
-    var pointermin = 0;
-    var pointermax = Math.min(text1.length, text2.length);
+    var pointermin:Int = 0;
+    var pointermax:Int = Std.int(Math.min(text1.length, text2.length));
     var pointermid = pointermax;
     var pointerstart = 0;
     while (pointermin < pointermid) {
@@ -562,14 +564,15 @@ class DiffMatchPatch {
    */
   function diff_commonSuffix(text1, text2) {
     // Quick check for common null cases.
-    if (!text1 || !text2 ||
+    //NOTE(hx): check falsey
+    if (text1 != null || text2 != null ||
         text1.charAt(text1.length - 1) != text2.charAt(text2.length - 1)) {
       return 0;
     }
     // Binary search.
     // Performance analysis: http://neil.fraser.name/news/2007/10/09/
-    var pointermin = 0;
-    var pointermax = Math.min(text1.length, text2.length);
+    var pointermin:Int = 0;
+    var pointermax = Std.int(Math.min(text1.length, text2.length));
     var pointermid = pointermax;
     var pointerend = 0;
     while (pointermin < pointermid) {
@@ -2235,21 +2238,9 @@ class PatchObj {
  */
 
 typedef Diff = Array<SingleDiff>;
- 
-abstract SingleDiff(Array<Dynamic>) to Array<Dynamic> {
-  inline public function new(array:Array<Dynamic>) {
-    this = array;
-  }
-  
-  public function getOp() {
-    return (this[0] : DiffOp);
-  }
-  
-  public function getText():SString {
-    return (this[1] : SString);
-  }
-}
 
+typedef SingleDiff = Array<Dynamic>;
+ 
 @:enum abstract DiffOp(Int) {
   /**
    * The data structure representing a diff is an array of tuples:
@@ -2263,7 +2254,8 @@ abstract SingleDiff(Array<Dynamic>) to Array<Dynamic> {
 
 
 @:forward
-abstract SString(String) {
+@:forwardStatics
+abstract SString(String) from String to String {
   inline public function new(s:String) {
     this = s;
   }

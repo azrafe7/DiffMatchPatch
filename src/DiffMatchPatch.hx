@@ -83,10 +83,10 @@ class DiffMatchPatch {
     // Set a deadline by which time the diff must be complete.
     if (opt_deadline == null) {
       if (this.Diff_Timeout <= 0) {
-        opt_deadline = InternalTools.NUMBER_MAX;
+        opt_deadline = Internal.NUMBER_MAX;
       } else {
         //NOTE(hx): check getTime()
-        opt_deadline = (new Date().getTime()) + this.Diff_Timeout * 1000;
+        opt_deadline = (Date.now().getTime()) + this.Diff_Timeout * 1000;
       }
     }
     var deadline = opt_deadline;
@@ -1657,10 +1657,11 @@ class DiffMatchPatch {
    * for text1 to text2 (method 4) or undefined (methods 1,2,3).
    * @return {!Array.<!diff_match_patch.patch_obj>} Array of Patch objects.
    */
+  //NOTE(hx): this is a bit problematic (either types)
   function patch_make(a, opt_b, opt_c) {
     var text1, diffs;
-    if (typeof a == 'string' && typeof opt_b == 'string' &&
-        typeof opt_c == 'undefined') {
+    if (Std.is(a, String) && Std.is(opt_b, String) &&
+        opt_c == null) {
       // Method 1: text1, text2
       // Compute diffs from text1 and text2.
       text1 = /** @type {string} */(a);
@@ -1669,19 +1670,19 @@ class DiffMatchPatch {
         this.diff_cleanupSemantic(diffs);
         this.diff_cleanupEfficiency(diffs);
       }
-    } else if (a && typeof a == 'object' && typeof opt_b == 'undefined' &&
-        typeof opt_c == 'undefined') {
+    } else if (a != null && Std.is(a, Diff) && opt_b == null &&
+        opt_c == null) {
       // Method 2: diffs
       // Compute text1 from diffs.
       diffs = /** @type {!Array.<!diff_match_patch.Diff>} */(a);
       text1 = this.diff_text1(diffs);
-    } else if (typeof a == 'string' && opt_b && typeof opt_b == 'object' &&
-        typeof opt_c == 'undefined') {
+    } else if (Std.is(a, String) && opt_b != null && Std.is(opt_b, Diff) &&
+        opt_c == null) {
       // Method 3: text1, diffs
       text1 = /** @type {string} */(a);
       diffs = /** @type {!Array.<!diff_match_patch.Diff>} */(opt_b);
-    } else if (typeof a == 'string' && typeof opt_b == 'string' &&
-        opt_c && typeof opt_c == 'object') {
+    } else if (Std.is(a, String) && Std.is(opt_b, String) &&
+        opt_c != null && Std.is(opt_c, Diff)) {
       // Method 4: text1, text2, diffs
       // text2 is not used.
       text1 = /** @type {string} */(a);
@@ -1690,11 +1691,11 @@ class DiffMatchPatch {
       throw new Error('Unknown call format to patch_make.');
     }
 
-    if (diffs.length === 0) {
+    if (diffs.length == 0) {
       return [];  // Get rid of the null case.
     }
     var patches = [];
-    var patch = new diff_match_patch.patch_obj();
+    var patch = new PatchObj();
     var patchDiffLength = 0;  // Keeping our own length var is faster in JS.
     var char_count1 = 0;  // Number of characters into the text1 string.
     var char_count2 = 0;  // Number of characters into the text2 string.
@@ -1703,11 +1704,11 @@ class DiffMatchPatch {
     // context info.
     var prepatch_text = text1;
     var postpatch_text = text1;
-    for (var x = 0; x < diffs.length; x++) {
+    for (x in 0...diffs.length) {
       var diff_type = diffs[x][0];
       var diff_text = diffs[x][1];
 
-      if (!patchDiffLength && diff_type !== DIFF_EQUAL) {
+      if (!patchDiffLength && diff_type != DIFF_EQUAL) {
         // A new patch starts here.
         patch.start1 = char_count1;
         patch.start2 = char_count2;
@@ -1739,7 +1740,7 @@ class DiffMatchPatch {
             if (patchDiffLength) {
               this.patch_addContext_(patch, prepatch_text);
               patches.push(patch);
-              patch = new diff_match_patch.patch_obj();
+              patch = new PatchObj();
               patchDiffLength = 0;
               // Unlike Unidiff, our patch lists have a rolling context.
               // http://code.google.com/p/google-diff-match-patch/wiki/Unidiff
@@ -1753,10 +1754,10 @@ class DiffMatchPatch {
       }
 
       // Update the current character count.
-      if (diff_type !== DIFF_INSERT) {
+      if (diff_type != DIFF_INSERT) {
         char_count1 += diff_text.length;
       }
-      if (diff_type !== DIFF_DELETE) {
+      if (diff_type != DIFF_DELETE) {
         char_count2 += diff_text.length;
       }
     }
@@ -1778,11 +1779,11 @@ class DiffMatchPatch {
   function patch_deepCopy(patches) {
     // Making deep copies is hard in JavaScript.
     var patchesCopy = [];
-    for (var x = 0; x < patches.length; x++) {
+    for (x in 0...patches.length) {
       var patch = patches[x];
-      var patchCopy = new diff_match_patch.patch_obj();
+      var patchCopy = new PatchObj();
       patchCopy.diffs = [];
-      for (var y = 0; y < patch.diffs.length; y++) {
+      for (y in 0...patch.diffs.length) {
         patchCopy.diffs[y] = patch.diffs[y].slice();
       }
       patchCopy.start1 = patch.start1;
@@ -1821,7 +1822,7 @@ class DiffMatchPatch {
     // has an effective expected position of 22.
     var delta = 0;
     var results = [];
-    for (var x = 0; x < patches.length; x++) {
+    for (x in 0...patches.length) {
       var expected_loc = patches[x].start2 + delta;
       var text1 = this.diff_text1(patches[x].diffs);
       var start_loc;
@@ -1876,20 +1877,20 @@ class DiffMatchPatch {
             this.diff_cleanupSemanticLossless(diffs);
             var index1 = 0;
             var index2;
-            for (var y = 0; y < patches[x].diffs.length; y++) {
+            for (y = 0...patches[x].diffs.length) {
               var mod = patches[x].diffs[y];
-              if (mod[0] !== DIFF_EQUAL) {
+              if (mod[0] != DIFF_EQUAL) {
                 index2 = this.diff_xIndex(diffs, index1);
               }
-              if (mod[0] === DIFF_INSERT) {  // Insertion
+              if (mod[0] == DIFF_INSERT) {  // Insertion
                 text = text.substring(0, start_loc + index2) + mod[1] +
                        text.substring(start_loc + index2);
-              } else if (mod[0] === DIFF_DELETE) {  // Deletion
+              } else if (mod[0] == DIFF_DELETE) {  // Deletion
                 text = text.substring(0, start_loc + index2) +
                        text.substring(start_loc + this.diff_xIndex(diffs,
                            index1 + mod[1].length));
               }
-              if (mod[0] !== DIFF_DELETE) {
+              if (mod[0] != DIFF_DELETE) {
                 index1 += mod[1].length;
               }
             }
@@ -1912,12 +1913,13 @@ class DiffMatchPatch {
   function patch_addPadding(patches) {
     var paddingLength = this.Patch_Margin;
     var nullPadding = '';
-    for (var x = 1; x <= paddingLength; x++) {
+    //NOTE(hx): <= in loop
+    for (x = 1...paddingLength + 1) {
       nullPadding += String.fromCharCode(x);
     }
 
     // Bump all the patches forward.
-    for (var x = 0; x < patches.length; x++) {
+    for (x in 0...patches.length) {
       patches[x].start1 += paddingLength;
       patches[x].start2 += paddingLength;
     }
@@ -1970,7 +1972,8 @@ class DiffMatchPatch {
    */
   function patch_splitMax(patches) {
     var patch_size = this.Match_MaxBits;
-    for (var x = 0; x < patches.length; x++) {
+    //NOTE(hx): loops with continue
+    for (x in 0...patches.length) {
       if (patches[x].length1 <= patch_size) {
         continue;
       }
@@ -1980,27 +1983,27 @@ class DiffMatchPatch {
       var start1 = bigpatch.start1;
       var start2 = bigpatch.start2;
       var precontext = '';
-      while (bigpatch.diffs.length !== 0) {
+      while (bigpatch.diffs.length != 0) {
         // Create one of several smaller patches.
-        var patch = new diff_match_patch.patch_obj();
+        var patch = new PatchObj();
         var empty = true;
         patch.start1 = start1 - precontext.length;
         patch.start2 = start2 - precontext.length;
-        if (precontext !== '') {
+        if (precontext != '') {
           patch.length1 = patch.length2 = precontext.length;
           patch.diffs.push([DIFF_EQUAL, precontext]);
         }
-        while (bigpatch.diffs.length !== 0 &&
+        while (bigpatch.diffs.length != 0 &&
                patch.length1 < patch_size - this.Patch_Margin) {
           var diff_type = bigpatch.diffs[0][0];
           var diff_text = bigpatch.diffs[0][1];
-          if (diff_type === DIFF_INSERT) {
+          if (diff_type == DIFF_INSERT) {
             // Insertions are harmless.
             patch.length2 += diff_text.length;
             start2 += diff_text.length;
             patch.diffs.push(bigpatch.diffs.shift());
             empty = false;
-          } else if (diff_type === DIFF_DELETE && patch.diffs.length == 1 &&
+          } else if (diff_type == DIFF_DELETE && patch.diffs.length == 1 &&
                      patch.diffs[0][0] == DIFF_EQUAL &&
                      diff_text.length > 2 * patch_size) {
             // This is a large deletion.  Let it pass in one chunk.
@@ -2015,7 +2018,7 @@ class DiffMatchPatch {
                 patch_size - patch.length1 - this.Patch_Margin);
             patch.length1 += diff_text.length;
             start1 += diff_text.length;
-            if (diff_type === DIFF_EQUAL) {
+            if (diff_type == DIFF_EQUAL) {
               patch.length2 += diff_text.length;
               start2 += diff_text.length;
             } else {
@@ -2037,11 +2040,11 @@ class DiffMatchPatch {
         // Append the end context for this patch.
         var postcontext = this.diff_text1(bigpatch.diffs)
                               .substring(0, this.Patch_Margin);
-        if (postcontext !== '') {
+        if (postcontext != '') {
           patch.length1 += postcontext.length;
           patch.length2 += postcontext.length;
-          if (patch.diffs.length !== 0 &&
-              patch.diffs[patch.diffs.length - 1][0] === DIFF_EQUAL) {
+          if (patch.diffs.length != 0 &&
+              patch.diffs[patch.diffs.length - 1][0] == DIFF_EQUAL) {
             patch.diffs[patch.diffs.length - 1][1] += postcontext;
           } else {
             patch.diffs.push([DIFF_EQUAL, postcontext]);
@@ -2062,7 +2065,7 @@ class DiffMatchPatch {
    */
   function patch_toText(patches) {
     var text = [];
-    for (var x = 0; x < patches.length; x++) {
+    for (x in 0...patches.length) {
       text[x] = patches[x];
     }
     return text.join('');
@@ -2082,16 +2085,16 @@ class DiffMatchPatch {
     }
     var text = textline.split('\n');
     var textPointer = 0;
-    var patchHeader = /^@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@$/;
+    var patchHeader = ~/^@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@$/;
     while (textPointer < text.length) {
       var m = text[textPointer].match(patchHeader);
       if (!m) {
         throw new Error('Invalid patch string: ' + text[textPointer]);
       }
-      var patch = new diff_match_patch.patch_obj();
+      var patch = new PatchObj();
       patches.push(patch);
       patch.start1 = parseInt(m[1], 10);
-      if (m[2] === '') {
+      if (m[2] == '') {
         patch.start1--;
         patch.length1 = 1;
       } else if (m[2] == '0') {
@@ -2102,7 +2105,7 @@ class DiffMatchPatch {
       }
 
       patch.start2 = parseInt(m[3], 10);
-      if (m[4] === '') {
+      if (m[4] == '') {
         patch.start2--;
         patch.length2 = 1;
       } else if (m[4] == '0') {
@@ -2117,7 +2120,7 @@ class DiffMatchPatch {
         var sign = text[textPointer].charAt(0);
         try {
           var line = decodeURI(text[textPointer].substring(1));
-        } catch (ex) {
+        } catch (ex:Dynamic) {
           // Malformed URI sequence.
           throw new Error('Illegal escape in patch_fromText: ' + line);
         }
@@ -2133,7 +2136,7 @@ class DiffMatchPatch {
         } else if (sign == '@') {
           // Start of next patch.
           break;
-        } else if (sign === '') {
+        } else if (sign == '') {
           // Blank line?  Whatever.
         } else {
           // WTF?
@@ -2146,16 +2149,18 @@ class DiffMatchPatch {
   };
 
 
-
+  //NOTE(hx): not sure if action is needed here (we'll see later)
 
   // Export these global variables so that they survive Google's JS compiler.
   // In a browser, 'this' will be 'window'.
   // Users of node.js should 'require' the uncompressed version since Google's
   // JS compiler may break the following exports for non-browser environments.
+  /*
   this['diff_match_patch'] = diff_match_patch;
   this['DIFF_DELETE'] = DIFF_DELETE;
   this['DIFF_INSERT'] = DIFF_INSERT;
   this['DIFF_EQUAL'] = DIFF_EQUAL;
+  */
 }
 
 
@@ -2188,14 +2193,14 @@ class PatchObj {
    */
   function toString() {
     var coords1, coords2;
-    if (this.length1 === 0) {
+    if (this.length1 == 0) {
       coords1 = this.start1 + ',0';
     } else if (this.length1 == 1) {
       coords1 = this.start1 + 1;
     } else {
       coords1 = (this.start1 + 1) + ',' + this.length1;
     }
-    if (this.length2 === 0) {
+    if (this.length2 == 0) {
       coords2 = this.start2 + ',0';
     } else if (this.length2 == 1) {
       coords2 = this.start2 + 1;
@@ -2205,7 +2210,7 @@ class PatchObj {
     var text = ['@@ -' + coords1 + ' +' + coords2 + ' @@\n'];
     var op;
     // Escape the body of the patch with %xx notation.
-    for (var x = 0; x < this.diffs.length; x++) {
+    for (x in 0...this.diffs.length) {
       switch (this.diffs[x][0]) {
         case DIFF_INSERT:
           op = '+';
@@ -2219,7 +2224,7 @@ class PatchObj {
       }
       text[x + 1] = op + encodeURI(this.diffs[x][1]) + '\n';
     }
-    return text.join('').replace(/%20/g, ' ');
+    return text.join('').replace(~/%20/g, ' ');
   };
 }
 
@@ -2265,10 +2270,13 @@ abstract SString(String) {
 }
 
 abstract Error(String) from String to String {
-  
+  inline public function new(s:String) {
+    this = s;
+  }
 }
 
-class InnerTools {
+@:allow(DiffMatchPatch)
+class Internal {
   //NOTE(hx): change here later
   static inline var NUMBER_MAX = 1.7976931348623157e+308;
 }

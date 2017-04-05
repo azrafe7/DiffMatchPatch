@@ -37,7 +37,7 @@
  * 
  *  - watch for regexes (search for 'match')
  *  - check Date
- *  - encode/decodeURI -> urlEncode/Decode
+ *  - encode/decodeURI -> urlEncode/Decode (does haxe urlDecode throw on failing?)
  *  - watch for fallthroughs in switch cases
  */
 
@@ -310,9 +310,9 @@ class DiffMatchPatch {
     var max_d = Math.ceil((text1_length + text2_length) / 2);
     var v_offset = max_d;
     var v_length = 2 * max_d;
-    //NOTE(hx): new fixed array
-    var v1 = [for (i in 0...v_length) null];
-    var v2 = [for (i in 0...v_length) null];
+    //NOTE(hx): new fixed array (with nullable values)
+    var v1:Array<Null<Int>> = [for (i in 0...v_length) null];
+    var v2:Array<Null<Int>> = [for (i in 0...v_length) null];
     // Setting all elements to -1 is faster in Chrome & Firefox than mixing
     // integers and undefined.
     var x = 0;
@@ -693,7 +693,8 @@ class DiffMatchPatch {
       var seed = longtext.substring(i, i + Math.floor(longtext.length / 4));
       var j = -1;
       var best_common = '';
-      var best_longtext_a, best_longtext_b, best_shorttext_a, best_shorttext_b;
+      //NOTE(hx): Local variables best_* used without being initialized
+      var best_longtext_a = '', best_longtext_b = '', best_shorttext_a = '', best_shorttext_b = '';
       while ((j = shorttext.indexOf(seed, j + 1)) != -1) {
         var prefixLength = dmp.diff_commonPrefix(longtext.substring(i),
                                                  shorttext.substring(j));
@@ -1442,7 +1443,7 @@ class DiffMatchPatch {
    * @param {number} loc The location to search around.
    * @return {number} Best match index or -1.
    */
-  function match_main(text:SString, pattern:SString, loc:Int) {
+  function match_main(text:SString, pattern:SString, ?loc:Int) {
     // Check for null inputs.
     if (text == null || pattern == null || loc == null) {
       throw new Error('Null input. (match_main)');
@@ -1522,7 +1523,7 @@ class DiffMatchPatch {
 
     var bin_min, bin_mid;
     var bin_max = pattern.length + text.length;
-    var last_rd;
+    var last_rd = null; //NOTE(hx): init first
     //NOTE(hx): nested loops
     for (d in 0...pattern.length) {
       // Scan for the best match; each iteration allows for one more error.
@@ -1543,7 +1544,7 @@ class DiffMatchPatch {
       var start = Std.int(Math.max(1, loc - bin_mid + 1));
       var finish = Std.int(Math.min(loc + bin_mid, text.length)) + pattern.length;
 
-      var rd = [for (i in 0...finish + 2 + 1) null]; //NOTE(hx): init array by length
+      var rd:Array<Null<Int>> = [for (i in 0...finish + 2 + 1) null]; //NOTE(hx): init array by length
       rd[finish + 1] = (1 << d) - 1;
       var j = finish;
       //for (var j = finish; j >= start; j--) {
@@ -1558,7 +1559,7 @@ class DiffMatchPatch {
                   (((last_rd[j + 1] | last_rd[j]) << 1) | 1) |
                   last_rd[j + 1];
         }
-        if (rd[j] != null & matchmask) { //NOTE(hx): check conditional
+        if (((rd[j] != null).boolAsInt() & matchmask) != 0) { //NOTE(hx): check conditional
           var score = match_bitapScore_(d, j - 1);
           // This match will almost certainly be better than any existing match.
           // But check anyway.
@@ -1900,7 +1901,7 @@ class DiffMatchPatch {
           } else {
             this.diff_cleanupSemanticLossless(diffs);
             var index1 = 0;
-            var index2;
+            var index2 = 0; //NOTE(hx): init
             for (y in 0...patches[x].diffs.length) {
               var mod = patches[x].diffs[y];
               if (mod[0] != DIFF_EQUAL) {
@@ -2115,52 +2116,53 @@ class DiffMatchPatch {
     var textPointer = 0;
     var patchHeader = ~/^@@ -(\d+),?(\d*) \+(\d+),?(\d*) @@$/;
     while (textPointer < text.length) {
-      var m = patchHeader.match(text[textPointer]); //NOTE(hx): check regex matching
+      var m = patchHeader.match(text[textPointer]); //NOTE(hx): check regex matching/matches
       if (!m) {
         throw new Error('Invalid patch string: ' + text[textPointer]);
       }
       var patch = new PatchObj();
       patches.push(patch);
-      patch.start1 = parseInt(m[1], 10);
-      if (m[2] == '') {
+      patch.start1 = Std.parseInt(patchHeader.matched(1)/*, 10*/);
+      if (patchHeader.matched(2) == '') {
         patch.start1--;
         patch.length1 = 1;
-      } else if (m[2] == '0') {
+      } else if (patchHeader.matched(2) == '0') {
         patch.length1 = 0;
       } else {
         patch.start1--;
-        patch.length1 = parseInt(m[2], 10);
+        patch.length1 = Std.parseInt(patchHeader.matched(2)/*, 10*/);
       }
 
-      patch.start2 = parseInt(m[3], 10);
-      if (m[4] == '') {
+      patch.start2 = Std.parseInt(patchHeader.matched(3)/*, 10*/);
+      if (patchHeader.matched(4) == '') {
         patch.start2--;
         patch.length2 = 1;
-      } else if (m[4] == '0') {
+      } else if (patchHeader.matched(4) == '0') {
         patch.length2 = 0;
       } else {
         patch.start2--;
-        patch.length2 = parseInt(m[4], 10);
+        patch.length2 = Std.parseInt(patchHeader.matched(4)/*, 10*/);
       }
       textPointer++;
 
       while (textPointer < text.length) {
         var sign = text[textPointer].charAt(0);
+        var line = "";
         try {
-          var line = decodeURI(text[textPointer].substring(1));
+          line = StringTools.urlDecode(text[textPointer].substring(1)); //NOTE(hx): decodeURI -> urlDecode (throw? - move line outside)
         } catch (ex:Dynamic) {
           // Malformed URI sequence.
-          throw new Error('Illegal escape in patch_fromText: ' + line);
+          throw new Error('Illegal escape in patch_fromText: ' + /*line*/text[textPointer].substring(1));
         }
         if (sign == '-') {
           // Deletion.
-          patch.diffs.push([DIFF_DELETE, line]);
+          patch.diffs.push(new SingleDiff(DIFF_DELETE, line));
         } else if (sign == '+') {
           // Insertion.
-          patch.diffs.push([DIFF_INSERT, line]);
+          patch.diffs.push(new SingleDiff(DIFF_INSERT, line));
         } else if (sign == ' ') {
           // Minor equality.
-          patch.diffs.push([DIFF_EQUAL, line]);
+          patch.diffs.push(new SingleDiff(DIFF_EQUAL, line));
         } else if (sign == '@') {
           // Start of next patch.
           break;
@@ -2219,24 +2221,25 @@ class PatchObj {
    * Indicies are printed as 1-based, not 0-based.
    * @return {string} The GNU diff string.
    */
+  //NOTE(hx): check int to str conversions
   function toString() {
     var coords1, coords2;
     if (this.length1 == 0) {
       coords1 = this.start1 + ',0';
     } else if (this.length1 == 1) {
-      coords1 = this.start1 + 1;
+      coords1 = '' + (this.start1 + 1);
     } else {
       coords1 = (this.start1 + 1) + ',' + this.length1;
     }
     if (this.length2 == 0) {
       coords2 = this.start2 + ',0';
     } else if (this.length2 == 1) {
-      coords2 = this.start2 + 1;
+      coords2 = '' + (this.start2 + 1);
     } else {
       coords2 = (this.start2 + 1) + ',' + this.length2;
     }
     var text = ['@@ -' + coords1 + ' +' + coords2 + ' @@\n'];
-    var op;
+    var op = ''; //NOTE(hx): init
     // Escape the body of the patch with %xx notation.
     for (x in 0...this.diffs.length) {
       switch (this.diffs[x][0]) {
@@ -2250,9 +2253,9 @@ class PatchObj {
           op = ' ';
           break;
       }
-      text[x + 1] = op + encodeURI(this.diffs[x][1]) + '\n';
+      text[x + 1] = op + StringTools.urlEncode(this.diffs[x][1]) + '\n'; //NOTE(hx): encodeURI -> urlEncode
     }
-    return text.join('').replace(~/%20/g, ' ');
+    return ~/%20/g.replace(text.join(''), ' ');
   };
 }
 

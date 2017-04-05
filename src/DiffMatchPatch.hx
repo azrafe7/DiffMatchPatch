@@ -580,7 +580,7 @@ class DiffMatchPatch {
   public function diff_commonSuffix(text1, text2):Int {
     // Quick check for common null cases.
     //NOTE(hx): check falsey
-    if (text1 != null || text2 != null ||
+    if (text1 == null || text2 == null ||
         text1.charAt(text1.length - 1) != text2.charAt(text2.length - 1)) {
       return 0;
     }

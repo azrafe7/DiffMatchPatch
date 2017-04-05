@@ -22,7 +22,7 @@
  * Applies the patch onto another text, allowing for errors.
  * @author fraser@google.com (Neil Fraser)
  * 
- * @author azrafe7 (port to haxe from http://google.com/p/google-diff-match-patch)
+ * @author azrafe7 (port to haxe from https://github.com/GerHobbelt/google-diff-match-patch - mirror of the original at https://code.google.com/p/google-diff-match-patch/)
  */
 
 /* 
@@ -467,7 +467,7 @@ class DiffMatchPatch {
    *     The zeroth element of the array of unique strings is intentionally blank.
    * @private
    */
-  function diff_linesToChars_(text1:SString, text2:SString) {
+  public function diff_linesToChars_(text1:SString, text2:SString) {
     var lineArray = [];  // e.g. lineArray[4] == 'Hello\n'
     //NOTE(hx): line hash - from obj to something haxe specific (Map or Dynamic)
     var lineHash = new Map<SString, Int>();   // e.g. lineHash['Hello\n'] == 4
@@ -664,7 +664,7 @@ class DiffMatchPatch {
    *     text2 and the common middle.  Or null if there was no match.
    * @private
    */
-  function diff_halfMatch_(text1:SString, text2:SString) {
+  public function diff_halfMatch_(text1:SString, text2:SString) {
     if (this.Diff_Timeout <= 0) {
       // Don't risk returning a non-optimal diff if we have unlimited time.
       return null;
@@ -724,11 +724,11 @@ class DiffMatchPatch {
     var hm2 = diff_halfMatchI_(longtext, shorttext,
                                Math.ceil(longtext.length / 2));
     var hm;
-    if (hm1 != null && hm2 != null) {
+    if (hm1 == null && hm2 == null) {
       return null;
-    } else if (hm2 != null) {
+    } else if (hm2 == null) {
       hm = hm1;
-    } else if (hm1 != null) {
+    } else if (hm1 == null) {
       hm = hm2;
     } else {
       // Both matched.  Select the longest.

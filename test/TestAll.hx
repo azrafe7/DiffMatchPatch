@@ -23,6 +23,7 @@ import buddy.BuddySuite;
 import buddy.Buddy;
 import buddy.SuitesRunner;
 import utest.Assert.*;
+import Helpers.*;
 
 
 @reporter("MochaReporter")
@@ -116,6 +117,78 @@ class TestMisc extends BuddySuite {
       // Some overly clever languages (C#) may treat ligatures as equal to their
       // component letters.  E.g. U+FB01 == 'fi'
         equals(0, dmp.diff_commonOverlap_('fi', '\ufb01i'));
+      });
+    });
+    
+    //function testDiffHalfMatch() {
+    describe('Detect a halfmatch.', {
+      dmp.Diff_Timeout = 1;
+      
+      it('No match.', {
+        equals(null, dmp.diff_halfMatch_('1234567890', 'abcdef'));
+
+        equals(null, dmp.diff_halfMatch_('12345', '23'));
+      });
+
+      it('Single Match.', {
+        assertEquivalent(['12', '90', 'a', 'z', '345678'], dmp.diff_halfMatch_('1234567890', 'a345678z'));
+
+        assertEquivalent(['a', 'z', '12', '90', '345678'], dmp.diff_halfMatch_('a345678z', '1234567890'));
+
+        assertEquivalent(['abc', 'z', '1234', '0', '56789'], dmp.diff_halfMatch_('abc56789z', '1234567890'));
+
+        assertEquivalent(['a', 'xyz', '1', '7890', '23456'], dmp.diff_halfMatch_('a23456xyz', '1234567890'));
+      });
+
+      it('Multiple Matches.', {
+        assertEquivalent(['12123', '123121', 'a', 'z', '1234123451234'], dmp.diff_halfMatch_('121231234123451234123121', 'a1234123451234z'));
+
+        assertEquivalent(['', '-=-=-=-=-=', 'x', '', 'x-=-=-=-=-=-=-='], dmp.diff_halfMatch_('x-=-=-=-=-=-=-=-=-=-=-=-=', 'xx-=-=-=-=-=-=-='));
+
+        assertEquivalent(['-=-=-=-=-=', '', '', 'y', '-=-=-=-=-=-=-=y'], dmp.diff_halfMatch_('-=-=-=-=-=-=-=-=-=-=-=-=y', '-=-=-=-=-=-=-=yy'));
+      });
+
+      it('Non-optimal halfmatch.', {
+        // Optimal diff would be -q+x=H-i+e=lloHe+Hu=llo-Hew+y not -qHillo+x=HelloHe-w+Hulloy
+        assertEquivalent(['qHillo', 'w', 'x', 'Hulloy', 'HelloHe'], dmp.diff_halfMatch_('qHilloHelloHew', 'xHelloHeHulloy'));
+      });
+
+      it('Optimal no halfmatch.', {
+        dmp.Diff_Timeout = 0;
+        equals(null, dmp.diff_halfMatch_('qHilloHelloHew', 'xHelloHeHulloy'));
+      });
+    });
+
+    function assertLinesToCharsResultEquals(a, b) {
+      equals(a.chars1, b.chars1);
+      equals(a.chars2, b.chars2);
+      assertEquivalent(a.lineArray, b.lineArray);
+    }
+
+    //function testDiffLinesToChars() {
+    describe('Convert lines down to characters.', {
+      it('Simple.', {
+        assertLinesToCharsResultEquals({chars1: '\x01\x02\x01', chars2: '\x02\x01\x02', lineArray: ['', 'alpha\n', 'beta\n']}, dmp.diff_linesToChars_('alpha\nbeta\nalpha\n', 'beta\nalpha\nbeta\n'));
+
+        assertLinesToCharsResultEquals({chars1: '', chars2: '\x01\x02\x03\x03', lineArray: ['', 'alpha\r\n', 'beta\r\n', '\r\n']}, dmp.diff_linesToChars_('', 'alpha\r\nbeta\r\n\r\n\r\n'));
+
+        assertLinesToCharsResultEquals( { chars1: '\x01', chars2: '\x02', lineArray: ['', 'a', 'b'] }, dmp.diff_linesToChars_('a', 'b'));
+      });
+
+      it('More than 256 to reveal any 8-bit limitations.', {
+        var n = 300;
+        var lineList = [];
+        var charList = [];
+        for (x in 1...n + 1) {
+          lineList[x - 1] = x + '\n';
+          charList[x - 1] = String.fromCharCode(x);
+        }
+        equals(n, lineList.length);
+        var lines = lineList.join('');
+        var chars = charList.join('');
+        equals(n, chars.length);
+        lineList.unshift('');
+        assertLinesToCharsResultEquals( { chars1: chars, chars2: '', lineArray: lineList }, dmp.diff_linesToChars_(lines, ''));
       });
     });
   }

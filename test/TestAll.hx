@@ -26,6 +26,8 @@ import utest.Assert.*;
 import Helpers.*;
 
 
+//NOTE(hx): using Assert.same as a subst for assertEquivalent
+
 @reporter("MochaReporter")
 class TestAll implements Buddy <[
     TestMisc, 
@@ -167,7 +169,7 @@ class TestMisc extends BuddySuite {
 
     //function testDiffLinesToChars() {
     describe('Convert lines down to characters.', {
-      it('Simple.', {
+      it('Default case.', {
         assertLinesToCharsResultEquals({chars1: '\x01\x02\x01', chars2: '\x02\x01\x02', lineArray: ['', 'alpha\n', 'beta\n']}, dmp.diff_linesToChars_('alpha\nbeta\nalpha\n', 'beta\nalpha\nbeta\n'));
 
         assertLinesToCharsResultEquals({chars1: '', chars2: '\x01\x02\x03\x03', lineArray: ['', 'alpha\r\n', 'beta\r\n', '\r\n']}, dmp.diff_linesToChars_('', 'alpha\r\nbeta\r\n\r\n\r\n'));
@@ -189,6 +191,110 @@ class TestMisc extends BuddySuite {
         equals(n, chars.length);
         lineList.unshift('');
         assertLinesToCharsResultEquals( { chars1: chars, chars2: '', lineArray: lineList }, dmp.diff_linesToChars_(lines, ''));
+      });
+    });
+    
+    //function testDiffCharsToLines() {
+    describe('Convert chars up to lines.', {
+      it('Default case.', {
+        var diffs = [new SingleDiff(DIFF_EQUAL, '\x01\x02\x01'), new SingleDiff(DIFF_INSERT, '\x02\x01\x02')];
+        dmp.diff_charsToLines_(diffs, ['', 'alpha\n', 'beta\n']);
+        assertEquivalent([new SingleDiff(DIFF_EQUAL, 'alpha\nbeta\nalpha\n'), new SingleDiff(DIFF_INSERT, 'beta\nalpha\nbeta\n')], diffs);
+      });
+
+      it('More than 256 to reveal any 8-bit limitations.', {
+        jsDebugger();
+        var n = 300;
+        var lineList = [];
+        var charList = [];
+        for (x in 1...n + 1) {
+          lineList[x - 1] = x + '\n';
+          charList[x - 1] = String.fromCharCode(x);
+        }
+        equals(n, lineList.length);
+        var lines = lineList.join('');
+        var chars = charList.join('');
+        equals(n, chars.length);
+        lineList.unshift('');
+        var diffs = [new SingleDiff(DIFF_DELETE, chars)];
+        dmp.diff_charsToLines_(diffs, lineList);
+        assertEquivalent([new SingleDiff(DIFF_DELETE, lines)], diffs);
+      });
+    });
+
+    //function testDiffCleanupMerge() {
+    var diffs:Diff = [];
+    
+    describe('Cleanup a messy diff.', {
+      it('Null case.', {
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([], diffs);
+      });
+
+      it('No change case.', {
+        diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_INSERT, 'c')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_INSERT, 'c')], diffs);
+      });
+      
+      it('Merge equalities.', {
+        diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_EQUAL, 'b'), new SingleDiff(DIFF_EQUAL, 'c')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([[DIFF_EQUAL, 'abc']], diffs);
+      });
+
+      it('Merge deletions.', {
+        diffs = [new SingleDiff(DIFF_DELETE, 'a'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_DELETE, 'c')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_DELETE, 'abc')], diffs);
+      });
+
+      it('Merge insertions.', {
+        diffs = [new SingleDiff(DIFF_INSERT, 'a'), new SingleDiff(DIFF_INSERT, 'b'), new SingleDiff(DIFF_INSERT, 'c')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_INSERT, 'abc')], diffs);
+      });
+
+      it('Merge interweave.', {
+        diffs = [new SingleDiff(DIFF_DELETE, 'a'), new SingleDiff(DIFF_INSERT, 'b'), new SingleDiff(DIFF_DELETE, 'c'), new SingleDiff(DIFF_INSERT, 'd'), new SingleDiff(DIFF_EQUAL, 'e'), new SingleDiff(DIFF_EQUAL, 'f')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_DELETE, 'ac'), new SingleDiff(DIFF_INSERT, 'bd'), new SingleDiff(DIFF_EQUAL, 'ef')], diffs);
+      });
+
+      it('Prefix and suffix detection.', {
+        diffs = [new SingleDiff(DIFF_DELETE, 'a'), new SingleDiff(DIFF_INSERT, 'abc'), new SingleDiff(DIFF_DELETE, 'dc')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'd'), new SingleDiff(DIFF_INSERT, 'b'), new SingleDiff(DIFF_EQUAL, 'c')], diffs);
+      });
+
+      it('Prefix and suffix detection with equalities.', {
+        diffs = [new SingleDiff(DIFF_EQUAL, 'x'), new SingleDiff(DIFF_DELETE, 'a'), new SingleDiff(DIFF_INSERT, 'abc'), new SingleDiff(DIFF_DELETE, 'dc'), new SingleDiff(DIFF_EQUAL, 'y')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_EQUAL, 'xa'), new SingleDiff(DIFF_DELETE, 'd'), new SingleDiff(DIFF_INSERT, 'b'), new SingleDiff(DIFF_EQUAL, 'cy')], diffs);
+      });
+
+      it('Slide edit left.', {
+        diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_INSERT, 'ba'), new SingleDiff(DIFF_EQUAL, 'c')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_INSERT, 'ab'), new SingleDiff(DIFF_EQUAL, 'ac')], diffs);
+      });
+
+      it('Slide edit right.', {
+        diffs = [new SingleDiff(DIFF_EQUAL, 'c'), new SingleDiff(DIFF_INSERT, 'ab'), new SingleDiff(DIFF_EQUAL, 'a')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_EQUAL, 'ca'), new SingleDiff(DIFF_INSERT, 'ba')], diffs);
+      });
+
+      it('Slide edit left recursive.', {
+        diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_EQUAL, 'c'), new SingleDiff(DIFF_DELETE, 'ac'), new SingleDiff(DIFF_EQUAL, 'x')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_DELETE, 'abc'), new SingleDiff(DIFF_EQUAL, 'acx')], diffs);
+      });
+
+      it('Slide edit right recursive.', {
+        diffs = [new SingleDiff(DIFF_EQUAL, 'x'), new SingleDiff(DIFF_DELETE, 'ca'), new SingleDiff(DIFF_EQUAL, 'c'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_EQUAL, 'a')];
+        dmp.diff_cleanupMerge(diffs);
+        assertEquivalent([new SingleDiff(DIFF_EQUAL, 'xca'), new SingleDiff(DIFF_DELETE, 'cba')], diffs);
       });
     });
   }

@@ -80,4 +80,11 @@ class Helpers {
     }
     return [text1, text2];
   }
+  
+  // call this function when you want to breakpoint at callee
+  inline static public function jsDebugger() {
+  #if (nodejs || js)
+    untyped __js__('debugger');
+  #end
+  }
 }

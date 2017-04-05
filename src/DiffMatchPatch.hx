@@ -526,7 +526,7 @@ class DiffMatchPatch {
    * @param {!Array.<string>} lineArray Array of unique strings.
    * @private
    */
-  function diff_charsToLines_(diffs:Diff, lineArray) {
+  public function diff_charsToLines_(diffs:Diff, lineArray) {
     //NOTE(hx): loops
     for (x in 0...diffs.length) {
       var chars = diffs[x][1];
@@ -1086,7 +1086,7 @@ class DiffMatchPatch {
    * Any edit section can move as long as it doesn't cross an equality.
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    */
-  function diff_cleanupMerge(diffs:Diff) {
+  public function diff_cleanupMerge(diffs:Diff) {
     diffs.push(new SingleDiff(DIFF_EQUAL, ''));  // Add a dummy entry at the end.
     var pointer = 0;
     var count_delete = 0;

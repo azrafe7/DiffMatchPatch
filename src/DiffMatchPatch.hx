@@ -546,7 +546,7 @@ class DiffMatchPatch {
    * @return {number} The number of characters common to the start of each
    *     string.
    */
-  function diff_commonPrefix(text1:SString, text2:SString):Int {
+  public function diff_commonPrefix(text1:SString, text2:SString):Int {
     // Quick check for common null cases.
     if (text1 == null || text2 == null || text1.charAt(0) != text2.charAt(0)) {
       return 0;
@@ -577,7 +577,7 @@ class DiffMatchPatch {
    * @param {string} text2 Second string.
    * @return {number} The number of characters common to the end of each string.
    */
-  function diff_commonSuffix(text1, text2):Int {
+  public function diff_commonSuffix(text1, text2):Int {
     // Quick check for common null cases.
     //NOTE(hx): check falsey
     if (text1 != null || text2 != null ||
@@ -612,7 +612,7 @@ class DiffMatchPatch {
    *     string and the start of the second string.
    * @private
    */
-  function diff_commonOverlap_(text1:SString, text2:SString) {
+  public function diff_commonOverlap_(text1:SString, text2:SString) {
     // Cache the text lengths to prevent multiple calls.
     var text1_length = text1.length;
     var text2_length = text2.length;
@@ -2328,6 +2328,10 @@ abstract SString(String) from String to String {
   @:op(A + B)
   static function add(a:SString, b:String):SString {
     return (a : String) + b;
+  }
+  
+  public function toString() {
+    return (this : String);
   }
 }
 

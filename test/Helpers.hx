@@ -82,9 +82,10 @@ class Helpers {
   }
   
   // call this function when you want to breakpoint at callee
-  inline static public function jsDebugger() {
+  inline static public function jsDebugger(?label:String) {
   #if (nodejs || js)
-    untyped __js__('debugger');
+    if (label != null) untyped __js__('debugger; {0}', label);
+    else untyped __js__('debugger');
   #end
   }
 }

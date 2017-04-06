@@ -183,11 +183,11 @@ class TestMisc extends BuddySuite {
         var charList = [];
         for (x in 1...n + 1) {
           lineList[x - 1] = x + '\n';
-          charList[x - 1] = String.fromCharCode(x);
+          charList[x - 1] = SString.fromCharCode(x);
         }
         equals(n, lineList.length);
-        var lines = lineList.join('');
-        var chars = charList.join('');
+        var lines:SString = lineList.join('');
+        var chars:SString = charList.join('');
         equals(n, chars.length);
         lineList.unshift('');
         assertLinesToCharsResultEquals( { chars1: chars, chars2: '', lineArray: lineList }, dmp.diff_linesToChars_(lines, ''));
@@ -209,7 +209,7 @@ class TestMisc extends BuddySuite {
         var charList = [];
         for (x in 1...n + 1) {
           lineList[x - 1] = x + '\n';
-          charList[x - 1] = String.fromCharCode(x);
+          charList[x - 1] = SString.fromCharCode(x);
         }
         equals(n, lineList.length);
         var lines = lineList.join('');
@@ -238,6 +238,7 @@ class TestMisc extends BuddySuite {
       });
       
       it('Merge equalities.', {
+        jsDebugger("merge eq");
         diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_EQUAL, 'b'), new SingleDiff(DIFF_EQUAL, 'c')];
         dmp.diff_cleanupMerge(diffs);
         assertEquivalent([[DIFF_EQUAL, 'abc']], diffs);

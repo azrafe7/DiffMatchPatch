@@ -41,7 +41,11 @@
  *  - watch for fallthroughs in switch cases
  */
 
+import unifill.CodePoint;
+
+using unifill.Unifill;
 using DiffMatchPatch.Internal; 
+
 
 class DiffMatchPatch {
 
@@ -258,11 +262,11 @@ class DiffMatchPatch {
         case DIFF_INSERT:
           count_insert++;
           text_insert += diffs[pointer][1];
-          break;
+          //break;
         case DIFF_DELETE:
           count_delete++;
           text_delete += diffs[pointer][1];
-          break;
+          //break;
         case DIFF_EQUAL:
           // Upon reaching an equality, check for prior redundancies.
           if (count_delete >= 1 && count_insert >= 1) {
@@ -283,7 +287,7 @@ class DiffMatchPatch {
           count_delete = 0;
           text_delete = '';
           text_insert = '';
-          break;
+          //break;
       }
       pointer++;
     }
@@ -503,9 +507,9 @@ class DiffMatchPatch {
 
         //NOTE(hx): hasOwnProperty (I predict this will break things somewhere)
         if (lineHash[line] != null) { //NOTE(hx): undefined
-          chars += String.fromCharCode(lineHash[line]);
+          chars += SString.fromCharCode(lineHash[line]);
         } else {
-          chars += String.fromCharCode(lineArrayLength);
+          chars += SString.fromCharCode(lineArrayLength);
           lineHash[line] = lineArrayLength;
           lineArray[lineArrayLength++] = line;
         }
@@ -1091,8 +1095,8 @@ class DiffMatchPatch {
     var pointer = 0;
     var count_delete = 0;
     var count_insert = 0;
-    var text_delete = '';
-    var text_insert = '';
+    var text_delete:SString = '';
+    var text_insert:SString = '';
     var commonlength;
     while (pointer < diffs.length) {
       switch (diffs[pointer][0]) {
@@ -1100,12 +1104,12 @@ class DiffMatchPatch {
           count_insert++;
           text_insert += diffs[pointer][1];
           pointer++;
-          break;
+          //break;
         case DIFF_DELETE:
           count_delete++;
           text_delete += diffs[pointer][1];
           pointer++;
-          break;
+          //break;
         case DIFF_EQUAL:
           // Upon reaching an equality, check for prior redundancies.
           if (count_delete + count_insert > 1) {
@@ -1163,7 +1167,7 @@ class DiffMatchPatch {
           count_delete = 0;
           text_delete = '';
           text_insert = '';
-          break;
+          //break;
       }
     }
     if (diffs[diffs.length - 1][1] == '') {
@@ -1269,13 +1273,13 @@ class DiffMatchPatch {
       switch (op) {
         case DIFF_INSERT:
           html[x] = '<ins style="background:#e6ffe6;">' + text + '</ins>';
-          break;
+          //break;
         case DIFF_DELETE:
           html[x] = '<del style="background:#ffe6e6;">' + text + '</del>';
-          break;
+          //break;
         case DIFF_EQUAL:
           html[x] = '<span>' + text + '</span>';
-          break;
+          //break;
       }
       
       x++;
@@ -1332,16 +1336,16 @@ class DiffMatchPatch {
       switch (op) {
         case DIFF_INSERT:
           insertions += data.length;
-          break;
+          //break;
         case DIFF_DELETE:
           deletions += data.length;
-          break;
+          //break;
         case DIFF_EQUAL:
           // A deletion and an insertion is one substitution.
           levenshtein += Std.int(Math.max(insertions, deletions));
           insertions = 0;
           deletions = 0;
-          break;
+          //break;
       }
     }
     levenshtein += Std.int(Math.max(insertions, deletions));
@@ -1363,13 +1367,13 @@ class DiffMatchPatch {
       switch (diffs[x][0]) {
         case DIFF_INSERT:
           text[x] = '+' + StringTools.urlEncode(diffs[x][1]); //NOTE(hx): encodeURI -> urlEncode
-          break;
+          //break;
         case DIFF_DELETE:
           text[x] = '-' + diffs[x][1].length;
-          break;
+          //break;
         case DIFF_EQUAL:
           text[x] = '=' + diffs[x][1].length;
-          break;
+          //break;
       }
     }
     return ~/%20/g.replace(text.join('\t'), ' ');
@@ -1401,7 +1405,7 @@ class DiffMatchPatch {
             // Malformed URI sequence.
             throw new Error('Illegal escape in diff_fromDelta: ' + param);
           }
-          break;
+          //break;
         case '-',
           // Fall through.
         /*case*/ '=':
@@ -1415,7 +1419,7 @@ class DiffMatchPatch {
           } else {
             diffs[diffsLength++] = new SingleDiff(DIFF_DELETE, text);
           }
-          break;
+          //break;
         default:
           // Blank tokens are ok (from a trailing \t).
           // Anything else is an error.
@@ -1743,14 +1747,14 @@ class DiffMatchPatch {
           patch.length2 += diff_text.length;
           postpatch_text = postpatch_text.substring(0, char_count2) + diff_text +
                            postpatch_text.substring(char_count2);
-          break;
+          //break;
         case DIFF_DELETE:
           patch.length1 += diff_text.length;
           patch.diffs[patchDiffLength++] = diffs[x];
           postpatch_text = postpatch_text.substring(0, char_count2) +
                            postpatch_text.substring(char_count2 +
                                diff_text.length);
-          break;
+          //break;
         case DIFF_EQUAL:
           //NOTE(hx): double check
           if ((diff_text.length <= 2).boolAsInt() * this.Patch_Margin != 0 &&
@@ -1774,7 +1778,7 @@ class DiffMatchPatch {
               char_count1 = char_count2;
             }
           }
-          break;
+          //break;
       }
 
       // Update the current character count.
@@ -1940,7 +1944,7 @@ class DiffMatchPatch {
     var nullPadding = '';
     //NOTE(hx): <= in loop
     for (x in 1...paddingLength + 1) {
-      nullPadding += String.fromCharCode(x);
+      nullPadding += SString.fromCharCode(x);
     }
 
     // Bump all the patches forward.
@@ -2245,13 +2249,13 @@ class PatchObj {
       switch (this.diffs[x][0]) {
         case DIFF_INSERT:
           op = '+';
-          break;
+          //break;
         case DIFF_DELETE:
           op = '-';
-          break;
+          //break;
         case DIFF_EQUAL:
           op = ' ';
-          break;
+          //break;
       }
       text[x + 1] = op + StringTools.urlEncode(this.diffs[x][1]) + '\n'; //NOTE(hx): encodeURI -> urlEncode
     }
@@ -2332,6 +2336,37 @@ abstract SString(String) from String to String {
   
   public function toString() {
     return (this : String);
+  }
+  
+  public var length(get, never):Int;
+  inline function get_length():Int {
+    trace("len " + this.length + "/" + Unifill.uLength(this));
+    return Unifill.uLength(this);
+  }
+  
+  static public function fromCharCode(code:Int) {
+    return CodePoint.fromInt(code);
+  }
+  
+  public function substr(startIndex : Int, ?length : Int) : String {
+    return Unifill.uSubstr(this, startIndex, length);
+  }
+  
+  public function substring(startIndex:Int, ?endIndex:Int) : String {
+    return Unifill.uSubstring(this, startIndex, endIndex);
+  }
+ 
+  public function indexOf(value:SString, startIndex:Int = 0) {
+    return Unifill.uIndexOf(this, value, startIndex);
+  }
+  
+  public function split(delimiter:SString):Array<SString> {
+    trace('split');
+    return Unifill.uSplit(this, delimiter);
+  }
+  
+  public function charAt(i:Int) {
+    return Unifill.uCharAt(this, i);
   }
 }
 

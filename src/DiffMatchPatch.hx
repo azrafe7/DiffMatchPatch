@@ -2281,6 +2281,7 @@ class MergePatch {
 
 typedef Diff = Array<SingleDiff>;
 
+@:native("SingleDiff")
 abstract SingleDiff(SingleDiffData) from SingleDiffData {
   public function new(op:DiffOp, text:SString) {
     this = new SingleDiffData(op, text);
@@ -2306,7 +2307,8 @@ abstract SingleDiff(SingleDiffData) from SingleDiffData {
     return '[' + this.op + ',"' + this.text + '"]';
   }
 }
- 
+
+@:structInit
 class SingleDiffData {
   public var op:DiffOp;
   public var text:SString;
@@ -2324,6 +2326,7 @@ class SingleDiffData {
 }
 
 
+@:native("SString")
 @:forward
 @:forwardStatics
 abstract SString(String) from String to String {

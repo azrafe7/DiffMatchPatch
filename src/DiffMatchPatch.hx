@@ -1684,6 +1684,7 @@ class DiffMatchPatch {
    */
   //NOTE(hx): this is a bit problematic (either types / casts)
   function patch_make(a, opt_b, opt_c) {
+    throw("not ready yet!!");
     var text1:SString, diffs:Diff;
     if (Std.is(a, String) && Std.is(opt_b, String) &&
         opt_c == null) {
@@ -1699,6 +1700,7 @@ class DiffMatchPatch {
         opt_c == null) {
       // Method 2: diffs
       // Compute text1 from diffs.
+      //NOTE(hx): recheck this as is seems to be problematic
       diffs = /** @type {!Array.<!diff_match_patch.Diff>} */(cast a);
       text1 = this.diff_text1(diffs);
     } else if (Std.is(a, String) && opt_b != null && Std.is(opt_b, Diff) &&
@@ -2349,7 +2351,7 @@ abstract SString(String) from String to String {
   
   public var length(get, never):Int;
   function get_length():Int {
-    trace("len " + this.length + "/" + Unifill.uLength(this));
+    //trace("len " + this.length + "/" + Unifill.uLength(this));
     return Unifill.uLength(this);
   }
   
@@ -2370,7 +2372,6 @@ abstract SString(String) from String to String {
   }
   
   public function split(delimiter:SString):Array<SString> {
-    trace('split');
     return Unifill.uSplit(this, delimiter);
   }
   

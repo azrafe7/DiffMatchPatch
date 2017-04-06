@@ -25,6 +25,8 @@ import buddy.SuitesRunner;
 import utest.Assert.*;
 import Helpers.*;
 
+using unifill.Unifill;
+
 
 //NOTE(hx): using Assert.same as a subst for assertEquivalent
 
@@ -183,11 +185,12 @@ class TestMisc extends BuddySuite {
         var charList = [];
         for (x in 1...n + 1) {
           lineList[x - 1] = x + '\n';
-          charList[x - 1] = SString.fromCharCode(x);
+          charList[x - 1] = String.fromCharCode(x);
         }
+        jsDebugger("line2chars >256");
         equals(n, lineList.length);
-        var lines:SString = lineList.join('');
-        var chars:SString = charList.join('');
+        var lines = lineList.join('');
+        var chars = charList.join('');
         equals(n, chars.length);
         lineList.unshift('');
         assertLinesToCharsResultEquals( { chars1: chars, chars2: '', lineArray: lineList }, dmp.diff_linesToChars_(lines, ''));
@@ -202,18 +205,39 @@ class TestMisc extends BuddySuite {
         assertEquivalent([new SingleDiff(DIFF_EQUAL, 'alpha\nbeta\nalpha\n'), new SingleDiff(DIFF_INSERT, 'beta\nalpha\nbeta\n')], diffs);
       });
 
+      it('NOTE(hx): Added case crossing 256 boundary.', {
+        var n = 10;
+        var lineList = [];
+        var charList = [];
+        var start = 250;
+        for (x in start...start + n + 1) {
+          lineList[x - 1] = x + '\n';
+          charList[x - 1] = String.fromCharCode(x);
+        }
+        equals(n, lineList.length);
+        var lines = lineList.join('');
+        var chars = charList.join('');
+        var len = chars.length;
+        jsDebugger('hx here');
+        equals(n, chars.length);
+        lineList.unshift('');
+        var diffs = [new SingleDiff(DIFF_DELETE, chars)];
+        dmp.diff_charsToLines_(diffs, lineList);
+        assertEquivalent([new SingleDiff(DIFF_DELETE, lines)], diffs);
+      });
+      
       it('More than 256 to reveal any 8-bit limitations.', {
-        jsDebugger();
         var n = 300;
         var lineList = [];
         var charList = [];
         for (x in 1...n + 1) {
           lineList[x - 1] = x + '\n';
-          charList[x - 1] = SString.fromCharCode(x);
+          charList[x - 1] = String.fromCharCode(x);
         }
         equals(n, lineList.length);
         var lines = lineList.join('');
         var chars = charList.join('');
+        jsDebugger('here');
         equals(n, chars.length);
         lineList.unshift('');
         var diffs = [new SingleDiff(DIFF_DELETE, chars)];
@@ -232,6 +256,7 @@ class TestMisc extends BuddySuite {
       });
 
       it('No change case.', {
+        jsDebugger('merge no change case');
         diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_INSERT, 'c')];
         dmp.diff_cleanupMerge(diffs);
         assertEquivalent([new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_INSERT, 'c')], diffs);
@@ -241,7 +266,7 @@ class TestMisc extends BuddySuite {
         jsDebugger("merge eq");
         diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_EQUAL, 'b'), new SingleDiff(DIFF_EQUAL, 'c')];
         dmp.diff_cleanupMerge(diffs);
-        assertEquivalent([[DIFF_EQUAL, 'abc']], diffs);
+        assertEquivalent([new SingleDiff(DIFF_EQUAL, 'abc')], diffs);
       });
 
       it('Merge deletions.', {
@@ -275,7 +300,8 @@ class TestMisc extends BuddySuite {
       });
 
       it('Slide edit left.', {
-        diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_INSERT, 'ba'), new SingleDiff(DIFF_EQUAL, 'c')];
+        jsDebugger('slide edit left');
+        diffs = [{op:DIFF_EQUAL, text:'a'}, new SingleDiff(DIFF_INSERT, 'ba'), new SingleDiff(DIFF_EQUAL, 'c')];
         dmp.diff_cleanupMerge(diffs);
         assertEquivalent([new SingleDiff(DIFF_INSERT, 'ab'), new SingleDiff(DIFF_EQUAL, 'ac')], diffs);
       });

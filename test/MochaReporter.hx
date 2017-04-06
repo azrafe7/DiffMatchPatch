@@ -29,39 +29,39 @@ private typedef Sys = Flash;
 class MochaReporter implements Reporter
 {
 #if php
-    var cli : Bool;
+  var cli : Bool;
 #end
 
-    var startTime:Float;
-    var overallProgress:StringBuf;
+  var startTime:Float;
+  var overallProgress:StringBuf;
   
-    public var timings:Map<Spec, Float>;
+  public var timings:Map<Spec, Float>;
   
 	
-    public function new() {}
+  public function new() {}
 
 	public function start()
 	{
 		// A small convenience for PHP, to avoid creating a new reporter.
-    #if php
+  #if php
 		cli = (untyped __call__("php_sapi_name")) == 'cli';
 		if(!cli) println("<pre>");
-    #end
+  #end
 
-        startTime = Timer.stamp();
-        timings = new Map();
-        overallProgress = new StringBuf();
-    
+    startTime = Timer.stamp();
+    timings = new Map();
+    overallProgress = new StringBuf();
+  
 		return resolveImmediately(true);
 	}
 
 	public function progress(spec:Spec)
 	{
-        var elapsed = Timer.stamp() - startTime;
-        elapsed = Std.int(elapsed * 1000) / 1000;
-        timings[spec] = elapsed;
-        startTime = Timer.stamp();
-    
+    var elapsed = Timer.stamp() - startTime;
+    elapsed = Std.int(elapsed * 1000) / 1000;
+    timings[spec] = elapsed;
+    startTime = Timer.stamp();
+  
 		print(switch(spec.status) {
 			case SpecStatus.Failed: "X";
 			case SpecStatus.Passed: ".";
@@ -74,12 +74,12 @@ class MochaReporter implements Reporter
 
 	public function done(suites : Iterable<Suite>, status : Bool)
 	{
-    
-    #if js
-        println(overallProgress.toString());
-    #end
   
-        println();
+  #if js
+    println(overallProgress.toString());
+  #end
+  
+    println();
 
 		var total = 0;
 		var failures = 0;
@@ -107,29 +107,29 @@ class MochaReporter implements Reporter
 		printTests = function(s : Suite, indentLevel : Int) {
 			var printIndent = function(str : String) println(str.lpad(" ", str.length + (indentLevel + 1) * 2));
 
-            var statusToStr = function(status : SpecStatus) {
-                return switch (status) {
-                    case SpecStatus.Failed:  "[FAIL]";
-                    case SpecStatus.Passed:  "[ OK ]";
-                    case SpecStatus.Pending: "[PEND]";
-                    case SpecStatus.Unknown: "[ ?? ]";
-                }
-            }
+      var statusToStr = function(status : SpecStatus) {
+        return switch (status) {
+          case SpecStatus.Failed:  "[FAIL]";
+          case SpecStatus.Passed:  "[ OK ]";
+          case SpecStatus.Pending: "[PEND]";
+          case SpecStatus.Unknown: "[ ?? ]";
+        }
+      }
 
 			function printStack(stack : Array<StackItem>) {
 				if (stack == null || stack.length == 0) return;
 				for (s in stack) switch s {
 					case FilePos(_, file, line) if (line > 0 && file.indexOf("buddy/internal/") != 0):
-						printIndent('    @ $file:$line');
+						printIndent('  @ $file:$line');
 					case _:
 				}
 			}
 			
 			function printTraces(spec : Spec) {
-				for (t in spec.traces) printIndent("    " + t);
+				for (t in spec.traces) printIndent("  " + t);
 			}
-            
-            println();
+      
+      println();
 			if (s.description.length > 0) printIndent(s.description);
 			
 			if (s.error != null) {
@@ -146,7 +146,7 @@ class MochaReporter implements Reporter
 					{
 						printIndent("  " + statusToStr(sp.status) + " " + sp.description + " (ERROR: " + sp.error + ")" + "  (" + timings[sp] + "s)");
 						printTraces(sp);
-                        printStack(sp.stack);
+            printStack(sp.stack);
 					}
 					else
 					{
@@ -160,38 +160,38 @@ class MochaReporter implements Reporter
 
 		suites.iter(printTests.bind(_, -1));
 
-        println();
+    println();
 		println('$total specs, $successes passed, $failures failed, $pending pending');
 
-        var totalTime:Float = .0;
-        for (t in timings) totalTime += t;
-        totalTime = Std.int(totalTime * 1000) / 1000;
-        println("total time: " + totalTime + "s");
+    var totalTime:Float = .0;
+    for (t in timings) totalTime += t;
+    totalTime = Std.int(totalTime * 1000) / 1000;
+    println("total time: " + totalTime + "s");
 		println();
-    
-    #if php
+  
+  #if php
 		if(!cli) println("</pre>");
-    #end
+  #end
 
-        return resolveImmediately(suites);
+    return resolveImmediately(suites);
 	}
 
 	private function print(s : String)
 	{
 	#if js
-        overallProgress.add(s);
-    #else
-        Sys.print(s);
-    #end
+    overallProgress.add(s);
+  #else
+    Sys.print(s);
+  #end
 	}
 
 	private function println(s : String = "")
 	{
-    #if js
+  #if js
 		untyped __js__("console.log(s)");
-    #else
-        Sys.println(s);
-    #end
+  #else
+    Sys.println(s);
+  #end
 	}
 
 	private function resolveImmediately<T>(o : T) : Promise<T>

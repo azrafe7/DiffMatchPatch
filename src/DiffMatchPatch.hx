@@ -32,7 +32,7 @@
  *  - Diff represent a single diff
  * 
  *  - check falsey values (null/empty/etc.)
- *  - check differences from js (splice/concat accept multiple values there)
+ *  - check differences from js (splice/concat accept multiple values there) - splice -> spliceInsert
  *  - in haxe [].push() returns an index
  * 
  *  - watch for regexes (search for 'match')
@@ -278,7 +278,7 @@ class DiffMatchPatch {
             //NOTE(hx): check loop
             var j = a.length - 1;
             while (j >= 0) {
-              diffs.splice(pointer, 0).push(a[j]);
+              diffs.spliceInsert(pointer, 0, [a[j]]);
               j--;
             }
             pointer = pointer + a.length;
@@ -488,8 +488,8 @@ class DiffMatchPatch {
      * @return {string} Encoded string.
      * @private
      */
-    function diff_linesToCharsMunge_(text) {
-      var chars = '';
+    function diff_linesToCharsMunge_(text:SString) {
+      var chars:SString = '';
       // Walk the text, pulling out a substring for each line.
       // text.split('\n') would would temporarily double our memory footprint.
       // Modifying text would create many large strings to garbage collect.
@@ -517,8 +517,8 @@ class DiffMatchPatch {
       return chars;
     }
 
-    var chars1 = diff_linesToCharsMunge_(text1);
-    var chars2 = diff_linesToCharsMunge_(text2);
+    var chars1:SString = diff_linesToCharsMunge_(text1);
+    var chars2:SString = diff_linesToCharsMunge_(text2);
     return {chars1: chars1, chars2: chars2, lineArray: lineArray};
   };
 
@@ -796,8 +796,7 @@ class DiffMatchPatch {
             (lastequality.length <= Math.max(length_insertions2,
                                              length_deletions2))) {
           // Duplicate record.
-          diffs.splice(equalities[equalitiesLength - 1], 0).push(
-                       new SingleDiff(DIFF_DELETE, lastequality));
+          diffs.spliceInsert(equalities[equalitiesLength - 1], 0, [new SingleDiff(DIFF_DELETE, lastequality)]);
           // Change second copy to insert.
           diffs[equalities[equalitiesLength - 1] + 1][0] = DIFF_INSERT;
           // Throw away the equality we just deleted.
@@ -840,8 +839,7 @@ class DiffMatchPatch {
           if (overlap_length1 >= deletion.length / 2 ||
               overlap_length1 >= insertion.length / 2) {
             // Overlap found.  Insert an equality and trim the surrounding edits.
-            diffs.splice(pointer, 0)
-                .push(new SingleDiff(DIFF_EQUAL, insertion.substring(0, overlap_length1)));
+            diffs.spliceInsert(pointer, 0, [new SingleDiff(DIFF_EQUAL, insertion.substring(0, overlap_length1))]);
             diffs[pointer - 1][1] =
                 deletion.substring(0, deletion.length - overlap_length1);
             diffs[pointer + 1][1] = insertion.substring(overlap_length1);
@@ -852,8 +850,7 @@ class DiffMatchPatch {
               overlap_length2 >= insertion.length / 2) {
             // Reverse overlap found.
             // Insert an equality and swap and trim the surrounding edits.
-            diffs.splice(pointer, 0)
-                .push(new SingleDiff(DIFF_EQUAL, deletion.substring(0, overlap_length2)));
+            diffs.spliceInsert(pointer, 0, [new SingleDiff(DIFF_EQUAL, deletion.substring(0, overlap_length2))]);
             diffs[pointer - 1][0] = DIFF_INSERT;
             diffs[pointer - 1][1] =
                 insertion.substring(0, insertion.length - overlap_length2);
@@ -1057,8 +1054,7 @@ class DiffMatchPatch {
                              ((lastequality.length < this.Diff_EditCost / 2) &&
                               (pre_ins.boolAsInt() + pre_del.boolAsInt() + post_ins.boolAsInt() + post_del.boolAsInt()) == 3))) {
           // Duplicate record.
-          diffs.splice(equalities[equalitiesLength - 1], 0)
-                       .push(new SingleDiff(DIFF_DELETE, lastequality));
+          diffs.spliceInsert(equalities[equalitiesLength - 1], 0, [new SingleDiff(DIFF_DELETE, lastequality)]);
           // Change second copy to insert.
           diffs[equalities[equalitiesLength - 1] + 1][0] = DIFF_INSERT;
           equalitiesLength--;  // Throw away the equality we just deleted;
@@ -1123,8 +1119,7 @@ class DiffMatchPatch {
                   diffs[pointer - count_delete - count_insert - 1][1] +=
                       text_insert.substring(0, commonlength);
                 } else {
-                  diffs.splice(0, 0).push(new SingleDiff(DIFF_EQUAL,
-                                      text_insert.substring(0, commonlength)));
+                  diffs.spliceInsert(0, 0, [new SingleDiff(DIFF_EQUAL, text_insert.substring(0, commonlength))]);
                   pointer++;
                 }
                 text_insert = text_insert.substring(commonlength);
@@ -1143,15 +1138,18 @@ class DiffMatchPatch {
             }
             // Delete the offending records and add the merged ones.
             if (count_delete == 0) {
-              diffs.splice(pointer - count_insert,
-                  count_delete + count_insert).push(new SingleDiff(DIFF_INSERT, text_insert));
+              diffs.spliceInsert(pointer - count_insert,
+                  count_delete + count_insert, 
+                  [new SingleDiff(DIFF_INSERT, text_insert)]);
             } else if (count_insert == 0) {
-              diffs.splice(pointer - count_delete,
-                  count_delete + count_insert).push(new SingleDiff(DIFF_DELETE, text_delete));
+              diffs.spliceInsert(pointer - count_delete,
+                  count_delete + count_insert,
+                  [new SingleDiff(DIFF_DELETE, text_delete)]);
             } else {
-              diffs.splice(pointer - count_delete - count_insert,
-                  count_delete + count_insert).push(new SingleDiff(DIFF_DELETE, text_delete));
-              diffs.push(new SingleDiff(DIFF_INSERT, text_insert));
+              diffs.spliceInsert(pointer - count_delete - count_insert,
+                  count_delete + count_insert,
+                  [new SingleDiff(DIFF_DELETE, text_delete),
+                   new SingleDiff(DIFF_INSERT, text_insert)]);
             }
             //NOTE(hx): count falsey values
             pointer = pointer - count_delete - count_insert +
@@ -2082,7 +2080,7 @@ class DiffMatchPatch {
           }
         }
         if (!empty) {
-          patches.splice(++x, 0).push(patch);
+          patches.spliceInsert(++x, 0, [patch]);
         }
       }
       
@@ -2303,6 +2301,10 @@ abstract SingleDiff(SingleDiffData) from SingleDiffData {
   public function clone():SingleDiff {
     return new SingleDiff(this.op, this.text);
   }
+  
+  public function toString() {
+    return '[' + this.op + ',"' + this.text + '"]';
+  }
 }
  
 class SingleDiffData {
@@ -2331,6 +2333,10 @@ abstract SString(String) from String to String {
   
   @:op(A + B)
   static function add(a:SString, b:String):SString {
+    /*var buf = new StringBuf();
+    for (c in a.uIterator()) buf.uAddChar(c);
+    for (c in b.uIterator()) buf.uAddChar(c);
+    return buf.toString();*/
     return (a : String) + b;
   }
   
@@ -2339,7 +2345,7 @@ abstract SString(String) from String to String {
   }
   
   public var length(get, never):Int;
-  inline function get_length():Int {
+  function get_length():Int {
     trace("len " + this.length + "/" + Unifill.uLength(this));
     return Unifill.uLength(this);
   }
@@ -2387,5 +2393,14 @@ class Internal {
   
   inline static function boolAsInt(b:Bool):Int {
     return (b ? 1 : 0);
+  }
+  
+  //NOTE(hx): try to improve perf on this one
+  static function spliceInsert<T>(array:Array<T>, start:Int, deleteCount:Int, insert:Array<T>) {
+    var deleted = array.splice(start, deleteCount);
+    for (i in 0...insert.length) {
+      array.insert(start + i, insert[i]);
+    }
+    return deleted;
   }
 }

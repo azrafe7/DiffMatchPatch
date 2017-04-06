@@ -1,7 +1,9 @@
 @echo off
-echo Compile
+echo Compiling...
 call haxe test.hxml -js bin\testall.js -lib hxnodejs
-echo.
-pause
-echo Run
+echo DONE
+echo Press a key to debug with node devtool...
+pause > NUL
+echo Launching...
 call devtool bin\testall.js --break
+echo DONE

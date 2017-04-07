@@ -2384,6 +2384,10 @@ abstract SString(String) from String to String {
   public function charAt(i:Int) {
     return Unifill.uCharAt(this, i);
   }
+  
+  public function charCodeAt(i:Int):Int {
+    return Unifill.uCharCodeAt(this, i);
+  }
 }
 
 abstract Error(String) from String to String {

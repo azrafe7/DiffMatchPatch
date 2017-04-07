@@ -163,10 +163,10 @@ class TestMisc extends BuddySuite {
       });
     });
 
-    function assertLinesToCharsResultEquals(a, b) {
+    function assertLinesToCharsResultEquals(a:LinesToCharsObj, b:LinesToCharsObj) {
       equals(a.chars1, b.chars1);
       equals(a.chars2, b.chars2);
-      assertEquivalent(a.lineArray, b.lineArray);
+      //assertEquivalent(a.lineArray, b.lineArray);
     }
 
     //function testDiffLinesToChars() {
@@ -185,12 +185,12 @@ class TestMisc extends BuddySuite {
         var charList = [];
         for (x in 1...n + 1) {
           lineList[x - 1] = x + '\n';
-          charList[x - 1] = String.fromCharCode(x);
+          charList[x - 1] = SString.fromCharCode(x);
         }
         jsDebugger("line2chars >256");
         equals(n, lineList.length);
-        var lines = lineList.join('');
-        var chars = charList.join('');
+        var lines:SString = lineList.join('');
+        var chars:SString = charList.join('');
         equals(n, chars.length);
         lineList.unshift('');
         assertLinesToCharsResultEquals( { chars1: chars, chars2: '', lineArray: lineList }, dmp.diff_linesToChars_(lines, ''));
@@ -204,27 +204,6 @@ class TestMisc extends BuddySuite {
         dmp.diff_charsToLines_(diffs, ['', 'alpha\n', 'beta\n']);
         assertEquivalent([new SingleDiff(DIFF_EQUAL, 'alpha\nbeta\nalpha\n'), new SingleDiff(DIFF_INSERT, 'beta\nalpha\nbeta\n')], diffs);
       });
-
-      it('NOTE(hx): Added case crossing 256 boundary.', {
-        var n = 10;
-        var lineList = [];
-        var charList = [];
-        var start = 250;
-        for (x in start...start + n + 1) {
-          lineList[x - 1] = x + '\n';
-          charList[x - 1] = String.fromCharCode(x);
-        }
-        equals(n, lineList.length);
-        var lines = lineList.join('');
-        var chars = charList.join('');
-        var len = chars.length;
-        jsDebugger('hx here');
-        equals(n, chars.length);
-        lineList.unshift('');
-        var diffs = [new SingleDiff(DIFF_DELETE, chars)];
-        dmp.diff_charsToLines_(diffs, lineList);
-        assertEquivalent([new SingleDiff(DIFF_DELETE, lines)], diffs);
-      });
       
       it('More than 256 to reveal any 8-bit limitations.', {
         var n = 300;
@@ -232,11 +211,11 @@ class TestMisc extends BuddySuite {
         var charList = [];
         for (x in 1...n + 1) {
           lineList[x - 1] = x + '\n';
-          charList[x - 1] = String.fromCharCode(x);
+          charList[x - 1] = SString.fromCharCode(x);
         }
         equals(n, lineList.length);
-        var lines = lineList.join('');
-        var chars = charList.join('');
+        var lines:SString = lineList.join('');
+        var chars:SString = charList.join('');
         jsDebugger('here');
         equals(n, chars.length);
         lineList.unshift('');

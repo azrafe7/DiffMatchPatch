@@ -471,8 +471,8 @@ class DiffMatchPatch {
    *     The zeroth element of the array of unique strings is intentionally blank.
    * @private
    */
-  public function diff_linesToChars_(text1:SString, text2:SString) {
-    var lineArray = [];  // e.g. lineArray[4] == 'Hello\n'
+  public function diff_linesToChars_(text1:SString, text2:SString):LinesToCharsObj {
+    var lineArray:Array<SString> = [];  // e.g. lineArray[4] == 'Hello\n'
     //NOTE(hx): line hash - from obj to something haxe specific (Map or Dynamic)
     var lineHash = new Map<SString, Int>();   // e.g. lineHash['Hello\n'] == 4
 
@@ -581,7 +581,7 @@ class DiffMatchPatch {
    * @param {string} text2 Second string.
    * @return {number} The number of characters common to the end of each string.
    */
-  public function diff_commonSuffix(text1, text2):Int {
+  public function diff_commonSuffix(text1:SString, text2:SString):Int {
     // Quick check for common null cases.
     //NOTE(hx): check falsey
     if (text1 == null || text2 == null ||
@@ -1690,8 +1690,8 @@ class DiffMatchPatch {
         opt_c == null) {
       // Method 1: text1, text2
       // Compute diffs from text1 and text2.
-      text1 = /** @type {string} */(a);
-      diffs = this.diff_main(text1, /** @type {string} */(opt_b), true);
+      text1 = /** @type {string} */(cast a);
+      diffs = this.diff_main(text1, /** @type {string} */(opt_b : SString), true);
       if (diffs.length > 2) {
         this.diff_cleanupSemantic(diffs);
         this.diff_cleanupEfficiency(diffs);
@@ -1706,14 +1706,14 @@ class DiffMatchPatch {
     } else if (Std.is(a, String) && opt_b != null && Std.is(opt_b, Diff) &&
         opt_c == null) {
       // Method 3: text1, diffs
-      text1 = /** @type {string} */(a);
+      text1 = /** @type {string} */(cast a);
       diffs = /** @type {!Array.<!diff_match_patch.Diff>} */(cast opt_b);
     } else if (Std.is(a, String) && Std.is(opt_b, String) &&
         opt_c != null && Std.is(opt_c, Diff)) {
       // Method 4: text1, text2, diffs
       // text2 is not used.
-      text1 = /** @type {string} */(a);
-      diffs = /** @type {!Array.<!diff_match_patch.Diff>} */(opt_c);
+      text1 = /** @type {string} */(cast a);
+      diffs = /** @type {!Array.<!diff_match_patch.Diff>} */(cast opt_c);
     } else {
       throw new Error('Unknown call format to patch_make.');
     }
@@ -1729,11 +1729,11 @@ class DiffMatchPatch {
     // Start with text1 (prepatch_text) and apply the diffs until we arrive at
     // text2 (postpatch_text).  We recreate the patches one by one to determine
     // context info.
-    var prepatch_text = text1;
-    var postpatch_text = text1;
+    var prepatch_text:SString = text1;
+    var postpatch_text:SString = text1;
     for (x in 0...diffs.length) {
       var diff_type = diffs[x][0];
-      var diff_text = diffs[x][1];
+      var diff_text:SString = diffs[x][1];
 
       if (patchDiffLength == 0 && diff_type != DIFF_EQUAL) {
         // A new patch starts here.
@@ -2328,6 +2328,12 @@ class SingleDiffData {
 }
 
 
+typedef LinesToCharsObj = {
+  var chars1:SString;
+  var chars2:SString;
+  var lineArray:Array<SString>;
+}
+
 @:native("SString")
 @:forward
 @:forwardStatics
@@ -2355,7 +2361,7 @@ abstract SString(String) from String to String {
     return Unifill.uLength(this);
   }
   
-  static public function fromCharCode(code:Int) {
+  static public function fromCharCode(code:Int):SString {
     return CodePoint.fromInt(code);
   }
   
@@ -2363,7 +2369,7 @@ abstract SString(String) from String to String {
     return Unifill.uSubstr(this, startIndex, length);
   }
   
-  public function substring(startIndex:Int, ?endIndex:Int) : String {
+  public function substring(startIndex:Int, ?endIndex:Int):SString {
     return Unifill.uSubstring(this, startIndex, endIndex);
   }
  

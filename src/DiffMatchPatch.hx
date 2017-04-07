@@ -530,10 +530,10 @@ class DiffMatchPatch {
    * @param {!Array.<string>} lineArray Array of unique strings.
    * @private
    */
-  public function diff_charsToLines_(diffs:Diff, lineArray) {
+  public function diff_charsToLines_(diffs:Diff, lineArray:Array<SString>) {
     //NOTE(hx): loops
     for (x in 0...diffs.length) {
-      var chars = diffs[x][1];
+      var chars:SString = diffs[x][1];
       var text = [];
       for (y in 0...chars.length) {
         text[y] = lineArray[chars.charCodeAt(y)];
@@ -1178,25 +1178,26 @@ class DiffMatchPatch {
     var changes = false;
     pointer = 1;
     // Intentionally ignore the first and last element (don't need checking).
+    //NOTE(hx): recheck forced typing
     while (pointer < diffs.length - 1) {
       if (diffs[pointer - 1][0] == DIFF_EQUAL &&
           diffs[pointer + 1][0] == DIFF_EQUAL) {
         // This is a single edit surrounded by equalities.
-        if (diffs[pointer][1].substring(diffs[pointer][1].length -
-            diffs[pointer - 1][1].length) == diffs[pointer - 1][1]) {
+        if ((diffs[pointer][1] : SString).substring((diffs[pointer][1] : SString).length -
+            (diffs[pointer - 1][1] : SString).length) == diffs[pointer - 1][1]) {
           // Shift the edit over the previous equality.
           diffs[pointer][1] = diffs[pointer - 1][1] +
-              diffs[pointer][1].substring(0, diffs[pointer][1].length -
-                                          diffs[pointer - 1][1].length);
+              (diffs[pointer][1] : SString).substring(0, (diffs[pointer][1] : SString).length -
+                                          (diffs[pointer - 1][1] : SString).length);
           diffs[pointer + 1][1] = diffs[pointer - 1][1] + diffs[pointer + 1][1];
           diffs.splice(pointer - 1, 1);
           changes = true;
-        } else if (diffs[pointer][1].substring(0, diffs[pointer + 1][1].length) ==
+        } else if ((diffs[pointer][1] : SString).substring(0, diffs[pointer + 1][1].length) ==
             diffs[pointer + 1][1]) {
           // Shift the edit over the next equality.
           diffs[pointer - 1][1] += diffs[pointer + 1][1];
           diffs[pointer][1] =
-              diffs[pointer][1].substring(diffs[pointer + 1][1].length) +
+              (diffs[pointer][1] : SString).substring(diffs[pointer + 1][1].length) +
               diffs[pointer + 1][1];
           diffs.splice(pointer + 1, 1);
           changes = true;

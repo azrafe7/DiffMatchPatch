@@ -166,15 +166,15 @@ class TestMisc extends BuddySuite {
     function assertLinesToCharsResultEquals(a:LinesToCharsObj, b:LinesToCharsObj) {
       equals(a.chars1, b.chars1);
       equals(a.chars2, b.chars2);
-      //assertEquivalent(a.lineArray, b.lineArray);
+      assertEquivalent(a.lineArray, b.lineArray);
     }
 
     //function testDiffLinesToChars() {
     describe('Convert lines down to characters.', {
       it('Default case.', {
-        assertLinesToCharsResultEquals({chars1: '\x01\x02\x01', chars2: '\x02\x01\x02', lineArray: ['', 'alpha\n', 'beta\n']}, dmp.diff_linesToChars_('alpha\nbeta\nalpha\n', 'beta\nalpha\nbeta\n'));
+        assertLinesToCharsResultEquals( { chars1: '\x01\x02\x01', chars2: '\x02\x01\x02', lineArray: ['', 'alpha\n', 'beta\n'] }, dmp.diff_linesToChars_('alpha\nbeta\nalpha\n', 'beta\nalpha\nbeta\n'));
 
-        assertLinesToCharsResultEquals({chars1: '', chars2: '\x01\x02\x03\x03', lineArray: ['', 'alpha\r\n', 'beta\r\n', '\r\n']}, dmp.diff_linesToChars_('', 'alpha\r\nbeta\r\n\r\n\r\n'));
+        assertLinesToCharsResultEquals( { chars1: '', chars2: '\x01\x02\x03\x03', lineArray: ['', 'alpha\r\n', 'beta\r\n', '\r\n'] }, dmp.diff_linesToChars_('', 'alpha\r\nbeta\r\n\r\n\r\n'));
 
         assertLinesToCharsResultEquals( { chars1: '\x01', chars2: '\x02', lineArray: ['', 'a', 'b'] }, dmp.diff_linesToChars_('a', 'b'));
       });
@@ -187,7 +187,6 @@ class TestMisc extends BuddySuite {
           lineList[x - 1] = x + '\n';
           charList[x - 1] = SString.fromCharCode(x);
         }
-        jsDebugger("line2chars >256");
         equals(n, lineList.length);
         var lines:SString = lineList.join('');
         var chars:SString = charList.join('');
@@ -216,7 +215,6 @@ class TestMisc extends BuddySuite {
         equals(n, lineList.length);
         var lines:SString = lineList.join('');
         var chars:SString = charList.join('');
-        jsDebugger('here');
         equals(n, chars.length);
         lineList.unshift('');
         var diffs = [new SingleDiff(DIFF_DELETE, chars)];
@@ -235,14 +233,12 @@ class TestMisc extends BuddySuite {
       });
 
       it('No change case.', {
-        jsDebugger('merge no change case');
         diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_INSERT, 'c')];
         dmp.diff_cleanupMerge(diffs);
         assertEquivalent([new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'b'), new SingleDiff(DIFF_INSERT, 'c')], diffs);
       });
       
       it('Merge equalities.', {
-        jsDebugger("merge eq");
         diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_EQUAL, 'b'), new SingleDiff(DIFF_EQUAL, 'c')];
         dmp.diff_cleanupMerge(diffs);
         assertEquivalent([new SingleDiff(DIFF_EQUAL, 'abc')], diffs);
@@ -279,7 +275,6 @@ class TestMisc extends BuddySuite {
       });
 
       it('Slide edit left.', {
-        jsDebugger('slide edit left');
         diffs = [{op:DIFF_EQUAL, text:'a'}, new SingleDiff(DIFF_INSERT, 'ba'), new SingleDiff(DIFF_EQUAL, 'c')];
         dmp.diff_cleanupMerge(diffs);
         assertEquivalent([new SingleDiff(DIFF_INSERT, 'ab'), new SingleDiff(DIFF_EQUAL, 'ac')], diffs);

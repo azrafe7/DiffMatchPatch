@@ -873,7 +873,7 @@ class DiffMatchPatch {
    * e.g: The c<ins>at c</ins>ame. -> The <ins>cat </ins>came.
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    */
-  function diff_cleanupSemanticLossless(diffs:Diff) {
+  public function diff_cleanupSemanticLossless(diffs:Diff) {
     /**
      * Given two strings, compute a score representing whether the internal
      * boundary falls on logical boundaries.
@@ -886,7 +886,7 @@ class DiffMatchPatch {
      */
     //NOTE(hx): regexes ahead!!
     function diff_cleanupSemanticScore_(one:SString, two:SString) {
-      if (one == null || two == null) {
+      if (one.isNullOrEmpty() || two.isNullOrEmpty()) {
         // Edges are the best.
         return 6;
       }
@@ -944,8 +944,8 @@ class DiffMatchPatch {
 
         // First, shift the edit as far left as possible.
         var commonOffset:Int = this.diff_commonSuffix(equality1, edit);
-        //NOTE(hx): > 0
-        if (commonOffset > 0) {
+        //NOTE(hx): != 0
+        if (commonOffset != 0) {
           var commonString = edit.substring(edit.length - commonOffset);
           equality1 = equality1.substring(0, equality1.length - commonOffset);
           edit = commonString + edit.substring(0, edit.length - commonOffset);
@@ -975,14 +975,14 @@ class DiffMatchPatch {
 
         if (diffs[pointer - 1][1] != bestEquality1) {
           // We have an improvement, save it back to the diff.
-          if (bestEquality1 != null) {
+          if (!bestEquality1.isNullOrEmpty()) {
             diffs[pointer - 1][1] = bestEquality1;
           } else {
             diffs.splice(pointer - 1, 1);
             pointer--;
           }
           diffs[pointer][1] = bestEdit;
-          if (bestEquality2 != null) {
+          if (!bestEquality2.isNullOrEmpty()) {
             diffs[pointer + 1][1] = bestEquality2;
           } else {
             diffs.splice(pointer + 1, 1);
@@ -2309,6 +2309,13 @@ abstract SingleDiff(SingleDiffData) from SingleDiffData {
   public function toString() {
     return '[' + this.op + ',"' + this.text + '"]';
   }
+  
+  @:from static function fromDynArray(dynArray:Array<Dynamic>):SingleDiff {
+  #if debug
+    if (dynArray.length != 2) throw 'dynArray must be of length 2, it was $dynArray';
+  #end
+    return new SingleDiff(dynArray[0], dynArray[1]);
+  }
 }
 
 @:structInit
@@ -2317,6 +2324,14 @@ class SingleDiffData {
   public var text:SString;
   
   public function new(op:DiffOp, text:SString):Void {
+  #if debug
+    switch (op) {
+      case DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT:
+      default:
+        throw '`op` must be a valid DiffOp, it was $op';
+    }
+    if (!Std.is(text, String)) throw '`text` must be compatible with SString, it was $text';
+  #end
     this.op = op;
     this.text = text;
   }
@@ -2366,7 +2381,7 @@ abstract SString(String) from String to String {
     return CodePoint.fromInt(code);
   }
   
-  public function substr(startIndex : Int, ?length : Int) : String {
+  public function substr(startIndex : Int, ?length : Int) : SString {
     return Unifill.uSubstr(this, startIndex, length);
   }
   
@@ -2382,7 +2397,7 @@ abstract SString(String) from String to String {
     return Unifill.uSplit(this, delimiter);
   }
   
-  public function charAt(i:Int) {
+  public function charAt(i:Int):SString {
     return Unifill.uCharAt(this, i);
   }
   
@@ -2391,11 +2406,13 @@ abstract SString(String) from String to String {
   }
 }
 
+
 abstract Error(String) from String to String {
   inline public function new(s:String) {
     this = s;
   }
 }
+
 
 @:allow(DiffMatchPatch)
 class Internal {

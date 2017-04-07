@@ -81,7 +81,7 @@ class Helpers {
     return [text1, text2];
   }
   
-  // call this function when you want to breakpoint at callee
+  // calling this function will set a breakpoint at caller site
   inline static public function jsDebugger(?label:String) {
   #if (nodejs || js)
     if (label != null) untyped __js__('debugger; {0}', label);

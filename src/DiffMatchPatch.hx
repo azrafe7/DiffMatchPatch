@@ -97,7 +97,7 @@ class DiffMatchPatch {
    *     instead.
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    */
-  function diff_main(text1:SString, text2:SString, ?opt_checklines:Bool, ?opt_deadline:Float):Diff {
+  public function diff_main(text1:SString, text2:SString, ?opt_checklines:Bool, ?opt_deadline:Float):Diff {
     // Set a deadline by which time the diff must be complete.
     if (opt_deadline == null) {
       if (this.Diff_Timeout <= 0) {
@@ -115,9 +115,9 @@ class DiffMatchPatch {
     }
 
     // Check for equality (speedup).
-    //NOTE(hx): why equality and then check for falsey?
+    //NOTE(hx): why equality and then check for falsey? (ooohh... now I get it - ref commit 'fix trivial diff null case' from 04/10/2017)
     if (text1 == text2) {
-      if (text1 != null) {
+      if (!text1.isNullOrEmpty()) {
         return [new SingleDiff(DIFF_EQUAL, text1)];
       }
       return [];
@@ -167,7 +167,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @private
    */
-  function diff_compute_(text1:SString, text2:SString, checklines:Bool, deadline:Float) {
+  function diff_compute_(text1:SString, text2:SString, checklines:Bool, deadline:Float):Diff {
     var diffs:Diff;
 
     //NOTE(hx): more falsey values
@@ -178,7 +178,7 @@ class DiffMatchPatch {
 
     if (text2.isNullOrEmpty()) {
       // Just delete some text (speedup).
-      return [new SingleDiff(DIFF_DELETE, text1)];
+      return ([new SingleDiff(DIFF_DELETE, text1)] : Diff);
     }
 
     var longtext = text1.length > text2.length ? text1 : text2;

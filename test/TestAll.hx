@@ -546,6 +546,7 @@ class TestMisc extends BuddySuite {
       });
 
       it('Verify pool of unchanged characters.', {
+        jsDebugger('verify');
         diffs = [[DIFF_INSERT, 'A-Z a-z 0-9 - _ . ! ~ * \' ( ) ; / ? : @ & = + $ , # ']];
         var text2 = dmp.diff_text2(diffs);
         equals('A-Z a-z 0-9 - _ . ! ~ * \' ( ) ; / ? : @ & = + $ , # ', text2);
@@ -599,6 +600,128 @@ class TestMisc extends BuddySuite {
         assertEquivalent(([[DIFF_DELETE, 'cat'], [DIFF_INSERT, 'map']] : Diff), dmp.diff_bisect_(a, b, 0));
       });
     });
+    
+    //function testDiffMain() {
+    describe('Perform a trivial diff.', {
+      var a:String = null;
+      var b:String = null;
+      
+      it('Null case.', {
+        jsDebugger('trivial diff null case');
+        assertEquivalent(([] : Diff), dmp.diff_main('', '', false));
+      });
+
+      it('Equality.', {
+        assertEquivalent(([[DIFF_EQUAL, 'abc']] : Diff), dmp.diff_main('abc', 'abc', false));
+      });
+
+      it('Simple insertion.', {
+        assertEquivalent(([[DIFF_EQUAL, 'ab'], [DIFF_INSERT, '123'], [DIFF_EQUAL, 'c']] : Diff), dmp.diff_main('abc', 'ab123c', false));
+      });
+
+      it('Simple deletion.', {
+        assertEquivalent(([[DIFF_EQUAL, 'a'], [DIFF_DELETE, '123'], [DIFF_EQUAL, 'bc']] : Diff), dmp.diff_main('a123bc', 'abc', false));
+      });
+
+      it('Two insertions.', {
+        assertEquivalent(([[DIFF_EQUAL, 'a'], [DIFF_INSERT, '123'], [DIFF_EQUAL, 'b'], [DIFF_INSERT, '456'], [DIFF_EQUAL, 'c']] : Diff), dmp.diff_main('abc', 'a123b456c', false));
+      });
+
+      it('Two deletions.', {
+        assertEquivalent(([[DIFF_EQUAL, 'a'], [DIFF_DELETE, '123'], [DIFF_EQUAL, 'b'], [DIFF_DELETE, '456'], [DIFF_EQUAL, 'c']] : Diff), dmp.diff_main('a123b456c', 'abc', false));
+      });
+    });
+    
+    /*describe('Perform a real diff.', {
+      var a:String = null;
+      var b:String = null;
+      
+      // Switch off the timeout.
+      dmp.Diff_Timeout = 0;
+      
+      it('Simple cases.', {
+        assertEquivalent([[DIFF_DELETE, 'a'], [DIFF_INSERT, 'b']], dmp.diff_main('a', 'b', false));
+
+        assertEquivalent([[DIFF_DELETE, 'Apple'], [DIFF_INSERT, 'Banana'], [DIFF_EQUAL, 's are a'], [DIFF_INSERT, 'lso'], [DIFF_EQUAL, ' fruit.']], dmp.diff_main('Apples are a fruit.', 'Bananas are also fruit.', false));
+      });
+
+      it('Invalid escape sequence (\\0).', {
+        //assertEquivalent([[DIFF_DELETE, 'a'], [DIFF_INSERT, '\u0680'], [DIFF_EQUAL, 'x'], [DIFF_DELETE, '\t'], [DIFF_INSERT, '\0']], dmp.diff_main('ax\t', '\u0680x\0', false));
+      });
+
+      it('Overlaps.', {
+        assertEquivalent([[DIFF_DELETE, '1'], [DIFF_EQUAL, 'a'], [DIFF_DELETE, 'y'], [DIFF_EQUAL, 'b'], [DIFF_DELETE, '2'], [DIFF_INSERT, 'xab']], dmp.diff_main('1ayb2', 'abxab', false));
+
+        assertEquivalent([[DIFF_INSERT, 'xaxcx'], [DIFF_EQUAL, 'abc'], [DIFF_DELETE, 'y']], dmp.diff_main('abcy', 'xaxcxabc', false));
+
+        assertEquivalent([[DIFF_DELETE, 'ABCD'], [DIFF_EQUAL, 'a'], [DIFF_DELETE, '='], [DIFF_INSERT, '-'], [DIFF_EQUAL, 'bcd'], [DIFF_DELETE, '='], [DIFF_INSERT, '-'], [DIFF_EQUAL, 'efghijklmnopqrs'], [DIFF_DELETE, 'EFGHIJKLMNOefg']], dmp.diff_main('ABCDa=bcd=efghijklmnopqrsEFGHIJKLMNOefg', 'a-bcd-efghijklmnopqrs', false));
+      });
+
+      it('Large equality.', {
+        assertEquivalent([[DIFF_INSERT, ' '], [DIFF_EQUAL, 'a'], [DIFF_INSERT, 'nd'], [DIFF_EQUAL, ' [[Pennsylvania]]'], [DIFF_DELETE, ' and [[New']], dmp.diff_main('a [[Pennsylvania]] and [[New', ' and [[Pennsylvania]]', false));
+      });
+
+      it('Timeout.', {
+        dmp.Diff_Timeout = 0.1;  // 100ms
+        a = '`Twas brillig, and the slithy toves\nDid gyre and gimble in the wabe:\nAll mimsy were the borogoves,\nAnd the mome raths outgrabe.\n';
+        b = 'I am the very model of a modern major general,\nI\'ve information vegetable, animal, and mineral,\nI know the kings of England, and I quote the fights historical,\nFrom Marathon to Waterloo, in order categorical.\n';
+        // Increase the text lengths by 1024 times to ensure a timeout.
+        for (x in 0...10) {
+          a = a + a;
+          b = b + b;
+        }
+        var startTime = (Date.now()).getTime();
+        dmp.diff_main(a, b);
+        var endTime = (Date.now()).getTime();
+        // Test that we took at least the timeout period.
+        isTrue(dmp.Diff_Timeout * 1000 <= endTime - startTime);
+        // Test that we didn't take forever (be forgiving).
+        // Theoretically this test could fail very occasionally if the
+        // OS task swaps or locks up for a second at the wrong moment.
+        // ****
+        // TODO(fraser): For unknown reasons this is taking 500 ms on Google's
+        // internal test system.  Whereas browsers take 140 ms.
+        //assertTrue(dmp.Diff_Timeout * 1000 * 2 > endTime - startTime);
+        // ****
+      });
+    });
+    
+    describe('Test the linemode speedup.', {
+      var a:String = null;
+      var b:String = null;
+      
+      dmp.Diff_Timeout = 0;
+
+      // Must be long to pass the 100 char cutoff.
+      it('Simple line-mode.', {
+        a = '1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n';
+        b = 'abcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\n';
+        assertEquivalent(dmp.diff_main(a, b, false), dmp.diff_main(a, b, true));
+      });
+
+      it('Single line-mode.', {
+        a = '1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890';
+        b = 'abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij';
+        assertEquivalent(dmp.diff_main(a, b, false), dmp.diff_main(a, b, true));
+      });
+
+      it('Overlap line-mode.', {
+        a = '1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n';
+        b = 'abcdefghij\n1234567890\n1234567890\n1234567890\nabcdefghij\n1234567890\n1234567890\n1234567890\nabcdefghij\n1234567890\n1234567890\n1234567890\nabcdefghij\n';
+        var texts_linemode = diff_rebuildtexts(dmp.diff_main(a, b, true));
+        var texts_textmode = diff_rebuildtexts(dmp.diff_main(a, b, false));
+        assertEquivalent(texts_textmode, texts_linemode);
+      });
+
+      it('Test null inputs.', {
+        try {
+          dmp.diff_main(null, null);
+          fail("Shouldn't reach this line");
+        } catch (e:Dynamic) {
+          // Exception expected.
+        }
+      });
+    });*/
   }
 }
 

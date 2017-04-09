@@ -32,6 +32,7 @@
  *  - Diff represent a single diff
  * 
  *  - check falsey values (null/empty/etc.)
+ *  - in js ("" == false) is true
  *  - check differences from js (splice/concat accept multiple values there) - splice -> spliceInsert
  *  - in haxe [].push() returns an index
  * 
@@ -39,6 +40,7 @@
  *  - check Date
  *  - encode/decodeURI -> urlEncode/Decode (does haxe urlDecode throw on failing?)
  *  - watch for fallthroughs in switch cases
+ * 
  */
 
 import unifill.CodePoint;
@@ -95,7 +97,7 @@ class DiffMatchPatch {
    *     instead.
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    */
-  function diff_main(text1:SString, text2:SString, ?opt_checklines, ?opt_deadline):Diff {
+  function diff_main(text1:SString, text2:SString, ?opt_checklines:Bool, ?opt_deadline:Float):Diff {
     // Set a deadline by which time the diff must be complete.
     if (opt_deadline == null) {
       if (this.Diff_Timeout <= 0) {
@@ -165,16 +167,16 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @private
    */
-  function diff_compute_(text1:SString, text2:SString, checklines, deadline) {
+  function diff_compute_(text1:SString, text2:SString, checklines:Bool, deadline:Float) {
     var diffs:Diff;
 
     //NOTE(hx): more falsey values
-    if (text1 != null) {
+    if (text1.isNullOrEmpty()) {
       // Just add some text (speedup).
       return ([new SingleDiff(DIFF_INSERT, text2)] : Diff);
     }
 
-    if (text2 != null) {
+    if (text2.isNullOrEmpty()) {
       // Just delete some text (speedup).
       return [new SingleDiff(DIFF_DELETE, text1)];
     }
@@ -315,8 +317,8 @@ class DiffMatchPatch {
     var v_offset = max_d;
     var v_length = 2 * max_d;
     //NOTE(hx): new fixed array (with nullable values)
-    var v1:Array<Null<Int>> = [for (i in 0...v_length) null];
-    var v2:Array<Null<Int>> = [for (i in 0...v_length) null];
+    var v1:NullIntArray = [for (i in 0...v_length) null];
+    var v2:NullIntArray = [for (i in 0...v_length) null];
     // Setting all elements to -1 is faster in Chrome & Firefox than mixing
     // integers and undefined.
     var x = 0;
@@ -668,7 +670,7 @@ class DiffMatchPatch {
    *     text2 and the common middle.  Or null if there was no match.
    * @private
    */
-  public function diff_halfMatch_(text1:SString, text2:SString) {
+  public function diff_halfMatch_(text1:SString, text2:SString):Array<SString> {
     if (this.Diff_Timeout <= 0) {
       // Don't risk returning a non-optimal diff if we have unlimited time.
       return null;
@@ -1534,7 +1536,7 @@ class DiffMatchPatch {
 
     var bin_min, bin_mid;
     var bin_max = pattern.length + text.length;
-    var last_rd = null; //NOTE(hx): init first
+    var last_rd:NullIntArray = null; //NOTE(hx): init first
     //NOTE(hx): nested loops
     for (d in 0...pattern.length) {
       // Scan for the best match; each iteration allows for one more error.
@@ -1555,7 +1557,7 @@ class DiffMatchPatch {
       var start = Std.int(Math.max(1, loc - bin_mid + 1));
       var finish = Std.int(Math.min(loc + bin_mid, text.length)) + pattern.length;
 
-      var rd:Array<Null<Int>> = [for (i in 0...finish + 2 + 1) null]; //NOTE(hx): init array by length
+      var rd:NullIntArray = [for (i in 0...finish + 2 + 1) null]; //NOTE(hx): init array by length
       rd[finish + 1] = (1 << d) - 1;
       var j = finish;
       //for (var j = finish; j >= start; j--) {
@@ -2458,5 +2460,24 @@ class Internal {
       array.insert(start + i, insert[i]);
     }
     return deleted;
+  }
+}
+
+@:forward
+abstract NullIntArray(Array<Null<Int>>) from Array<Null<Int>> {
+  
+  @:arrayAccess function get(idx:Int) {
+  #if debug
+    if (idx < 0 || idx >= this.length) throw "Out of bounds index.";
+  #end
+    return this[idx];
+  }
+  
+  @:arrayAccess function set(idx:Int, value:Null<Int>) {
+  #if debug
+    if (idx < 0 || idx >= this.length) throw "Out of bounds index.";
+    if (value == null) throw "setting null";
+  #end
+    return this[idx] = value;
   }
 }

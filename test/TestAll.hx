@@ -388,6 +388,7 @@ class TestMisc extends BuddySuite {
       });
       
       it('Multiple eliminations.', {
+        jsDebugger('mult elim');
         diffs = [[DIFF_INSERT, '1'], [DIFF_EQUAL, 'A'], [DIFF_DELETE, 'B'], [DIFF_INSERT, '2'], [DIFF_EQUAL, '_'], [DIFF_INSERT, '1'], [DIFF_EQUAL, 'A'], [DIFF_DELETE, 'B'], [DIFF_INSERT, '2']];
         dmp.diff_cleanupSemantic(diffs);
         assertEquivalent(([[DIFF_DELETE, 'AB_AB'], [DIFF_INSERT, '1A2_1A2']] : Diff), diffs);

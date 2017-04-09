@@ -763,7 +763,8 @@ class DiffMatchPatch {
    */
   public function diff_cleanupSemantic(diffs:Diff) {
     var changes = false;
-    var equalities = [];  // Stack of indices where equalities are found.
+    //NOTE(hx): using a map here, as it can have negative indices
+    var equalities = new Map<Int, Int>();  // Stack of indices where equalities are found.
     var equalitiesLength = 0;  // Keeping our own length var is faster in JS.
     /** @type {?string} */
     var lastequality:SString = null;
@@ -2442,6 +2443,9 @@ class Internal {
   
   //NOTE(hx): try to improve perf on this one
   static function spliceInsert<T>(array:Array<T>, start:Int, deleteCount:Int, insert:Array<T>) {
+  #if debug
+    if (start < 0) throw "Invalid indices";
+  #end
     var deleted = array.splice(start, deleteCount);
     for (i in 0...insert.length) {
       array.insert(start + i, insert[i]);

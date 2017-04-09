@@ -2419,8 +2419,9 @@ abstract SString(String) from String to String {
   
   public function charAt(i:Int):SString {
     //NOTE(hx): this is necessary for 'hitting end' test (involves diff_cleanupSemanticLossless), 
-    //          as in js "".charAt(0) == "", while elsewhere results in an exception being thrown
-    if (this == "" && i == 0) return "";
+    //          as in js "".charAt(0) == "", while elsewhere results in an exception being thrown.
+    //          Ooohh... you never stop learning: in js "123".charAt(-1) also equals "".
+    if (this == "" || i < 0) return "";
     return Unifill.uCharAt(this, i);
   }
   

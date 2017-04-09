@@ -761,7 +761,7 @@ class DiffMatchPatch {
    * Reduce the number of edits by eliminating semantically trivial equalities.
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    */
-  function diff_cleanupSemantic(diffs:Diff) {
+  public function diff_cleanupSemantic(diffs:Diff) {
     var changes = false;
     var equalities = [];  // Stack of indices where equalities are found.
     var equalitiesLength = 0;  // Keeping our own length var is faster in JS.
@@ -1005,7 +1005,7 @@ class DiffMatchPatch {
    * Reduce the number of edits by eliminating operationally trivial equalities.
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    */
-  function diff_cleanupEfficiency(diffs:Diff) {
+  public function diff_cleanupEfficiency(diffs:Diff) {
     var changes = false;
     var equalities = [];  // Stack of indices where equalities are found.
     var equalitiesLength = 0;  // Keeping our own length var is faster in JS.
@@ -1256,7 +1256,7 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    * @return {string} HTML representation.
    */
-  function diff_prettyHtml(diffs:Diff) {
+  public function diff_prettyHtml(diffs:Diff) {
     var html = [];
     var pattern_amp = ~/&/g;
     var pattern_lt = ~/</g;
@@ -1266,9 +1266,12 @@ class DiffMatchPatch {
     //for (var x = 0; x < diffs.length; x++) {
     while (x < diffs.length) {
       var op = diffs[x][0];    // Operation (insert, delete, equal)
-      var data = diffs[x][1];  // Text of change.
-      var text = data.replace(pattern_amp, '&amp;').replace(pattern_lt, '&lt;')
-          .replace(pattern_gt, '&gt;').replace(pattern_para, '&para;<br>');
+      var data:SString = diffs[x][1];  // Text of change.
+      //NOTE(hx): rearrange replace
+      var text:SString = pattern_amp.replace(data, '&amp;');
+      text = pattern_lt.replace(text, '&lt;');
+      text = pattern_gt.replace(text, '&gt;');
+      text = pattern_para.replace(text, '&para;<br>');
       switch (op) {
         case DIFF_INSERT:
           html[x] = '<ins style="background:#e6ffe6;">' + text + '</ins>';

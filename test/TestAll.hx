@@ -275,7 +275,7 @@ class TestMisc extends BuddySuite {
       });
 
       it('Slide edit left.', {
-        diffs = [{op:DIFF_EQUAL, text:'a'}, new SingleDiff(DIFF_INSERT, 'ba'), new SingleDiff(DIFF_EQUAL, 'c')];
+        diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_INSERT, 'ba'), new SingleDiff(DIFF_EQUAL, 'c')];
         dmp.diff_cleanupMerge(diffs);
         assertEquivalent([new SingleDiff(DIFF_INSERT, 'ab'), new SingleDiff(DIFF_EQUAL, 'ac')], diffs);
       });
@@ -353,64 +353,130 @@ class TestMisc extends BuddySuite {
       });
     });
 
-    /*//function testDiffCleanupSemantic() {
+    //function testDiffCleanupSemantic() {
     describe('Cleanup semantically trivial equalities.', {
+      var diffs:Diff = [];
+      
       it('Null case.', {
-        var diffs = [];
+        diffs = [];
         dmp.diff_cleanupSemantic(diffs);
         assertEquivalent([], diffs);
+      });
 
-        // No elimination #1.
+      it('No elimination #1.', {
         diffs = [[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']], diffs);
+        assertEquivalent(([[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']] : Diff), diffs);
+      });
 
-        // No elimination #2.
+      it('No elimination #2.', {
         diffs = [[DIFF_DELETE, 'abc'], [DIFF_INSERT, 'ABC'], [DIFF_EQUAL, '1234'], [DIFF_DELETE, 'wxyz']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_DELETE, 'abc'], [DIFF_INSERT, 'ABC'], [DIFF_EQUAL, '1234'], [DIFF_DELETE, 'wxyz']], diffs);
+        assertEquivalent(([[DIFF_DELETE, 'abc'], [DIFF_INSERT, 'ABC'], [DIFF_EQUAL, '1234'], [DIFF_DELETE, 'wxyz']] : Diff), diffs);
+      });
 
-        // Simple elimination.
+      it('Simple elimination.', {
         diffs = [[DIFF_DELETE, 'a'], [DIFF_EQUAL, 'b'], [DIFF_DELETE, 'c']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_DELETE, 'abc'], [DIFF_INSERT, 'b']], diffs);
+        assertEquivalent(([[DIFF_DELETE, 'abc'], [DIFF_INSERT, 'b']] : Diff), diffs);
+      });
 
-        // Backpass elimination.
+      it('Backpass elimination.', {
         diffs = [[DIFF_DELETE, 'ab'], [DIFF_EQUAL, 'cd'], [DIFF_DELETE, 'e'], [DIFF_EQUAL, 'f'], [DIFF_INSERT, 'g']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_DELETE, 'abcdef'], [DIFF_INSERT, 'cdfg']], diffs);
-
-        // Multiple eliminations.
+        assertEquivalent(([[DIFF_DELETE, 'abcdef'], [DIFF_INSERT, 'cdfg']] : Diff), diffs);
+      });
+      
+      it('Multiple eliminations.', {
         diffs = [[DIFF_INSERT, '1'], [DIFF_EQUAL, 'A'], [DIFF_DELETE, 'B'], [DIFF_INSERT, '2'], [DIFF_EQUAL, '_'], [DIFF_INSERT, '1'], [DIFF_EQUAL, 'A'], [DIFF_DELETE, 'B'], [DIFF_INSERT, '2']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_DELETE, 'AB_AB'], [DIFF_INSERT, '1A2_1A2']], diffs);
-
-        // Word boundaries.
+        assertEquivalent(([[DIFF_DELETE, 'AB_AB'], [DIFF_INSERT, '1A2_1A2']] : Diff), diffs);
+      });
+      
+      it('Word boundaries.', {
         diffs = [[DIFF_EQUAL, 'The c'], [DIFF_DELETE, 'ow and the c'], [DIFF_EQUAL, 'at.']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_EQUAL, 'The '], [DIFF_DELETE, 'cow and the '], [DIFF_EQUAL, 'cat.']], diffs);
+        assertEquivalent(([[DIFF_EQUAL, 'The '], [DIFF_DELETE, 'cow and the '], [DIFF_EQUAL, 'cat.']] : Diff), diffs);
+      });
 
-        // No overlap elimination.
+      it('No overlap elimination.', {
         diffs = [[DIFF_DELETE, 'abcxx'], [DIFF_INSERT, 'xxdef']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_DELETE, 'abcxx'], [DIFF_INSERT, 'xxdef']], diffs);
+        assertEquivalent(([[DIFF_DELETE, 'abcxx'], [DIFF_INSERT, 'xxdef']] : Diff), diffs);
+      });
 
-        // Overlap elimination.
+      it('Overlap elimination.', {
         diffs = [[DIFF_DELETE, 'abcxxx'], [DIFF_INSERT, 'xxxdef']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_DELETE, 'abc'], [DIFF_EQUAL, 'xxx'], [DIFF_INSERT, 'def']], diffs);
+        assertEquivalent(([[DIFF_DELETE, 'abc'], [DIFF_EQUAL, 'xxx'], [DIFF_INSERT, 'def']] : Diff), diffs);
+      });
 
-        // Reverse overlap elimination.
+      it('Reverse overlap elimination.', {
         diffs = [[DIFF_DELETE, 'xxxabc'], [DIFF_INSERT, 'defxxx']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_INSERT, 'def'], [DIFF_EQUAL, 'xxx'], [DIFF_DELETE, 'abc']], diffs);
+        assertEquivalent(([[DIFF_INSERT, 'def'], [DIFF_EQUAL, 'xxx'], [DIFF_DELETE, 'abc']] : Diff), diffs);
+      });
 
-        // Two overlap eliminations.
+      it('Two overlap eliminations.', {
         diffs = [[DIFF_DELETE, 'abcd1212'], [DIFF_INSERT, '1212efghi'], [DIFF_EQUAL, '----'], [DIFF_DELETE, 'A3'], [DIFF_INSERT, '3BC']];
         dmp.diff_cleanupSemantic(diffs);
-        assertEquivalent([[DIFF_DELETE, 'abcd'], [DIFF_EQUAL, '1212'], [DIFF_INSERT, 'efghi'], [DIFF_EQUAL, '----'], [DIFF_DELETE, 'A'], [DIFF_EQUAL, '3'], [DIFF_INSERT, 'BC']], diffs);
-    }*/
+        assertEquivalent(([[DIFF_DELETE, 'abcd'], [DIFF_EQUAL, '1212'], [DIFF_INSERT, 'efghi'], [DIFF_EQUAL, '----'], [DIFF_DELETE, 'A'], [DIFF_EQUAL, '3'], [DIFF_INSERT, 'BC']] : Diff), diffs);
+      });
+    });
 
+    //function testDiffCleanupEfficiency() {
+    describe('Cleanup operationally trivial equalities.', {
+      dmp.Diff_EditCost = 4;
+      var diffs:Diff = [];
+      
+      it('Null case.', {
+        var diffs = [];
+        dmp.diff_cleanupEfficiency(diffs);
+        assertEquivalent([], diffs);
+      });
+
+      it('No elimination.', {
+        diffs = [[DIFF_DELETE, 'ab'], [DIFF_INSERT, '12'], [DIFF_EQUAL, 'wxyz'], [DIFF_DELETE, 'cd'], [DIFF_INSERT, '34']];
+        dmp.diff_cleanupEfficiency(diffs);
+        assertEquivalent(([[DIFF_DELETE, 'ab'], [DIFF_INSERT, '12'], [DIFF_EQUAL, 'wxyz'], [DIFF_DELETE, 'cd'], [DIFF_INSERT, '34']] : Diff), diffs);
+      });
+
+      it('Four-edit elimination.', {
+        diffs = [[DIFF_DELETE, 'ab'], [DIFF_INSERT, '12'], [DIFF_EQUAL, 'xyz'], [DIFF_DELETE, 'cd'], [DIFF_INSERT, '34']];
+        dmp.diff_cleanupEfficiency(diffs);
+        assertEquivalent(([[DIFF_DELETE, 'abxyzcd'], [DIFF_INSERT, '12xyz34']] : Diff), diffs);
+      });
+
+      it('Three-edit elimination.', {
+        diffs = [[DIFF_INSERT, '12'], [DIFF_EQUAL, 'x'], [DIFF_DELETE, 'cd'], [DIFF_INSERT, '34']];
+        dmp.diff_cleanupEfficiency(diffs);
+        assertEquivalent(([[DIFF_DELETE, 'xcd'], [DIFF_INSERT, '12x34']] : Diff), diffs);
+      });
+
+      it('Backpass elimination.', {
+        diffs = [[DIFF_DELETE, 'ab'], [DIFF_INSERT, '12'], [DIFF_EQUAL, 'xy'], [DIFF_INSERT, '34'], [DIFF_EQUAL, 'z'], [DIFF_DELETE, 'cd'], [DIFF_INSERT, '56']];
+        dmp.diff_cleanupEfficiency(diffs);
+        assertEquivalent(([[DIFF_DELETE, 'abxyzcd'], [DIFF_INSERT, '12xy34z56']] : Diff), diffs);
+      });
+
+      it('High cost elimination.', {
+        dmp.Diff_EditCost = 5;
+        diffs = [[DIFF_DELETE, 'ab'], [DIFF_INSERT, '12'], [DIFF_EQUAL, 'wxyz'], [DIFF_DELETE, 'cd'], [DIFF_INSERT, '34']];
+        dmp.diff_cleanupEfficiency(diffs);
+        assertEquivalent(([[DIFF_DELETE, 'abwxyzcd'], [DIFF_INSERT, '12wxyz34']] : Diff), diffs);
+      });
+      
+      dmp.Diff_EditCost = 4;
+    });
+
+    //function testDiffPrettyHtml() {
+    describe('Pretty print.', {
+      it('Default case.', {
+        var diffs:Diff = [[DIFF_EQUAL, 'a\n'], [DIFF_DELETE, '<B>b</B>'], [DIFF_INSERT, 'c&d']];
+        jsDebugger('pretty');
+        equals('<span>a&para;<br></span><del style="background:#ffe6e6;">&lt;B&gt;b&lt;/B&gt;</del><ins style="background:#e6ffe6;">c&amp;d</ins>', dmp.diff_prettyHtml(diffs));
+      });
+    });
   }
 }
 

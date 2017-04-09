@@ -334,7 +334,6 @@ class TestMisc extends BuddySuite {
       });
 
       it('Hitting the start.', {
-        jsDebugger('hit start');
         diffs = [new SingleDiff(DIFF_EQUAL, 'a'), new SingleDiff(DIFF_DELETE, 'a'), new SingleDiff(DIFF_EQUAL, 'ax')];
         dmp.diff_cleanupSemanticLossless(diffs);
         assertEquivalent([new SingleDiff(DIFF_DELETE, 'a'), new SingleDiff(DIFF_EQUAL, 'aax')], diffs);
@@ -388,7 +387,6 @@ class TestMisc extends BuddySuite {
       });
       
       it('Multiple eliminations.', {
-        jsDebugger('mult elim');
         diffs = [[DIFF_INSERT, '1'], [DIFF_EQUAL, 'A'], [DIFF_DELETE, 'B'], [DIFF_INSERT, '2'], [DIFF_EQUAL, '_'], [DIFF_INSERT, '1'], [DIFF_EQUAL, 'A'], [DIFF_DELETE, 'B'], [DIFF_INSERT, '2']];
         dmp.diff_cleanupSemantic(diffs);
         assertEquivalent(([[DIFF_DELETE, 'AB_AB'], [DIFF_INSERT, '1A2_1A2']] : Diff), diffs);
@@ -431,7 +429,7 @@ class TestMisc extends BuddySuite {
       var diffs:Diff = [];
       
       it('Null case.', {
-        var diffs = [];
+        diffs = [];
         dmp.diff_cleanupEfficiency(diffs);
         assertEquivalent([], diffs);
       });
@@ -473,9 +471,132 @@ class TestMisc extends BuddySuite {
     //function testDiffPrettyHtml() {
     describe('Pretty print.', {
       it('Default case.', {
-        var diffs:Diff = [[DIFF_EQUAL, 'a\n'], [DIFF_DELETE, '<B>b</B>'], [DIFF_INSERT, 'c&d']];
-        jsDebugger('pretty');
+        diffs = [[DIFF_EQUAL, 'a\n'], [DIFF_DELETE, '<B>b</B>'], [DIFF_INSERT, 'c&d']];
         equals('<span>a&para;<br></span><del style="background:#ffe6e6;">&lt;B&gt;b&lt;/B&gt;</del><ins style="background:#e6ffe6;">c&amp;d</ins>', dmp.diff_prettyHtml(diffs));
+      });
+    });
+    
+    //function testDiffText() {
+    describe('DiffText.', {
+      it('Compute the source and destination texts.', {
+        diffs = [[DIFF_EQUAL, 'jump'], [DIFF_DELETE, 's'], [DIFF_INSERT, 'ed'], [DIFF_EQUAL, ' over '], [DIFF_DELETE, 'the'], [DIFF_INSERT, 'a'], [DIFF_EQUAL, ' lazy']];
+        equals('jumps over the lazy', dmp.diff_text1(diffs));
+
+        equals('jumped over a lazy', dmp.diff_text2(diffs));
+      });
+    });
+
+    //function testDiffDelta() {
+    describe('DiffDelta.', {
+      var diffs:Diff = [[DIFF_EQUAL, 'jump'], [DIFF_DELETE, 's'], [DIFF_INSERT, 'ed'], [DIFF_EQUAL, ' over '], [DIFF_DELETE, 'the'], [DIFF_INSERT, 'a'], [DIFF_EQUAL, ' lazy'], [DIFF_INSERT, 'old dog']];
+      var text1;
+      var delta;
+      
+      it('Convert a diff into delta string and back to diff.', {
+        text1 = dmp.diff_text1(diffs);
+        equals('jumps over the lazy', text1);
+
+        delta = dmp.diff_toDelta(diffs);
+        equals('=4\t-1\t+ed\t=6\t-3\t+a\t=5\t+old dog', delta);
+
+        assertEquivalent(diffs, dmp.diff_fromDelta(text1, delta));
+      });
+
+      it('Generates error (19 != 20).', {
+        try {
+          dmp.diff_fromDelta(text1 + 'x', delta);
+          fail("Shouldn't reach this line");
+        } catch (e:Dynamic) {
+          // Exception expected.
+          match(~/19.+length.+20/i, e.toString());
+        }
+      });
+
+      it('Generates error (19 != 18).', {
+        try {
+          dmp.diff_fromDelta(text1.substring(1), delta);
+          fail("Shouldn't reach this line");
+        } catch (e:Dynamic) {
+          // Exception expected.
+          match(~/19.+length.+18/i, e.toString());
+        }
+      });
+
+      it('Generates error (%c3%xy invalid Unicode).', {
+        try {
+          jsDebugger("here");
+          diffs = dmp.diff_fromDelta('', '+%c3%xy');
+          fail("Shouldn't reach this line");
+        } catch (e:Dynamic) {
+          // Exception expected.
+          match(~/illegal escape/i, e.toString());
+        }
+      });
+
+      it('Test deltas with special characters.', {
+        diffs = [[DIFF_EQUAL, '\u0680 \x00 \t %'], [DIFF_DELETE, '\u0681 \x01 \n ^'], [DIFF_INSERT, '\u0682 \x02 \\ |']];
+        text1 = dmp.diff_text1(diffs);
+        equals('\u0680 \x00 \t %\u0681 \x01 \n ^', text1);
+
+        jsDebugger('delta special');
+        delta = dmp.diff_toDelta(diffs);
+        equals('=7\t-7\t+%DA%82 %02 %5C %7C', delta);
+
+        assertEquivalent(diffs, dmp.diff_fromDelta(text1, delta));
+      });
+
+      it('Verify pool of unchanged characters.', {
+        diffs = [[DIFF_INSERT, 'A-Z a-z 0-9 - _ . ! ~ * \' ( ) ; / ? : @ & = + $ , # ']];
+        var text2 = dmp.diff_text2(diffs);
+        equals('A-Z a-z 0-9 - _ . ! ~ * \' ( ) ; / ? : @ & = + $ , # ', text2);
+
+        delta = dmp.diff_toDelta(diffs);
+        equals('+A-Z a-z 0-9 - _ . ! ~ * \' ( ) ; / ? : @ & = + $ , # ', delta);
+
+        assertEquivalent(diffs, dmp.diff_fromDelta('', delta));
+      });
+    });
+    
+    //function testDiffXIndex() {
+    describe('Translate a location in text1 to text2.', {
+      it('Translation on equality.', {
+        equals(5, dmp.diff_xIndex([[DIFF_DELETE, 'a'], [DIFF_INSERT, '1234'], [DIFF_EQUAL, 'xyz']], 2));
+      });
+
+      it('Translation on deletion.', {
+        equals(1, dmp.diff_xIndex([[DIFF_EQUAL, 'a'], [DIFF_DELETE, '1234'], [DIFF_EQUAL, 'xyz']], 3));
+      });
+    });
+
+    //function testDiffLevenshtein() {
+    describe('DiffLevenshtein.', {
+      it('Levenshtein with trailing equality.', {
+        equals(4, dmp.diff_levenshtein([[DIFF_DELETE, 'abc'], [DIFF_INSERT, '1234'], [DIFF_EQUAL, 'xyz']]));
+      });
+      
+      it('Levenshtein with leading equality.', {
+        equals(4, dmp.diff_levenshtein([[DIFF_EQUAL, 'xyz'], [DIFF_DELETE, 'abc'], [DIFF_INSERT, '1234']]));
+      });
+      
+      it('Levenshtein with middle equality.', {
+        equals(7, dmp.diff_levenshtein([[DIFF_DELETE, 'abc'], [DIFF_EQUAL, 'xyz'], [DIFF_INSERT, '1234']]));
+      });
+    });
+
+    //function testDiffBisect() {
+    describe('DiffBisect.', {
+      var a = 'cat';
+      var b = 'map';
+      // Since the resulting diff hasn't been normalized, it would be ok if
+      // the insertion and deletion pairs are swapped.
+      // If the order changes, tweak this test as required.
+      it('Normal.', {
+        jsDebugger('bisect');
+        assertEquivalent(([[DIFF_DELETE, 'c'], [DIFF_INSERT, 'm'], [DIFF_EQUAL, 'a'], [DIFF_DELETE, 't'], [DIFF_INSERT, 'p']] : Diff), dmp.diff_bisect_(a, b, @:privateAccess Internal.NUMBER_MAX));
+      });
+
+      it('Timeout.', {
+        assertEquivalent(([[DIFF_DELETE, 'cat'], [DIFF_INSERT, 'map']] : Diff), dmp.diff_bisect_(a, b, 0));
       });
     });
   }

@@ -307,7 +307,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @private
    */
-  function diff_bisect_(text1:SString, text2:SString, deadline) {
+  public function diff_bisect_(text1:SString, text2:SString, deadline:Float):Diff {
     // Cache the text lengths to prevent multiple calls.
     var text1_length = text1.length;
     var text2_length = text2.length;
@@ -1221,7 +1221,7 @@ class DiffMatchPatch {
    * @param {number} loc Location within text1.
    * @return {number} Location within text2.
    */
-  function diff_xIndex(diffs:Diff, loc) {
+  public function diff_xIndex(diffs:Diff, loc) {
     var chars1 = 0;
     var chars2 = 0;
     var last_chars1 = 0;
@@ -1296,11 +1296,13 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    * @return {string} Source text.
    */
-  function diff_text1(diffs:Diff) {
+  public function diff_text1(diffs:Diff):SString {
     var text = [];
     for (x in 0...diffs.length) {
       if (diffs[x][0] != DIFF_INSERT) {
         text[x] = diffs[x][1];
+      } else { //NOTE(hx): set to empty string, as in js ['a', null, 'b'].join('') is ok (null will be skipped), not so elsewhere
+        text[x] = "";
       }
     }
     return text.join('');
@@ -1312,11 +1314,13 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    * @return {string} Destination text.
    */
-  function diff_text2(diffs:Diff) {
+  public function diff_text2(diffs:Diff):SString {
     var text = [];
     for (x in 0...diffs.length) {
       if (diffs[x][0] != DIFF_DELETE) {
         text[x] = diffs[x][1];
+      } else { //NOTE(hx): set to empty string, as in js ['a', null, 'b'].join('') is ok (null will be skipped), not so elsewhere
+        text[x] = "";
       }
     }
     return text.join('');
@@ -1329,7 +1333,7 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    * @return {number} Number of changes.
    */
-  function diff_levenshtein(diffs:Diff) {
+  public function diff_levenshtein(diffs:Diff) {
     var levenshtein:Int = 0;
     var insertions = 0;
     var deletions = 0;
@@ -1364,7 +1368,7 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    * @return {string} Delta text.
    */
-  function diff_toDelta(diffs:Diff) {
+  public function diff_toDelta(diffs:Diff) {
     var text = [];
     for (x in 0...diffs.length) {
       switch (diffs[x][0]) {
@@ -1391,7 +1395,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @throws {!Error} If invalid input.
    */
-  function diff_fromDelta(text1, delta) {
+  public function diff_fromDelta(text1, delta):Diff {
     var diffs:Diff = [];
     var diffsLength = 0;  // Keeping our own length var is faster in JS.
     var pointer = 0;  // Cursor in text1

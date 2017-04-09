@@ -2284,8 +2284,14 @@ class MergePatch {
  * [[DIFF_DELETE, 'Hello'], [DIFF_INSERT, 'Goodbye'], [DIFF_EQUAL, ' world.']]
  * which means: delete 'Hello', add 'Goodbye' and keep ' world.'
  */
-
-typedef Diff = Array<SingleDiff>;
+@:native("Diff")
+@:forward
+@:forwardStatics
+abstract Diff(Array<SingleDiff>) from Array<SingleDiff> to Array<SingleDiff> {
+  public function toString() {
+    return '[' + this.join(', ') + ']';
+  }
+}
 
 @:native("SingleDiff")
 abstract SingleDiff(SingleDiffData) from SingleDiffData {
@@ -2309,8 +2315,8 @@ abstract SingleDiff(SingleDiffData) from SingleDiffData {
     return new SingleDiff(this.op, this.text);
   }
   
-  public function toString() {
-    return '[' + this.op + ',"' + this.text + '"]';
+  inline public function toString() {
+    return this.toString();
   }
   
   @:from static function fromDynArray(dynArray:Array<Dynamic>):SingleDiff {
@@ -2337,6 +2343,10 @@ class SingleDiffData {
   #end
     this.op = op;
     this.text = text;
+  }
+  
+  public function toString() {
+    return '[' + this.op + ',"' + this.text + '"]';
   }
 }
 

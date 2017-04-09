@@ -632,7 +632,7 @@ class TestMisc extends BuddySuite {
       });
     });
     
-    /*describe('Perform a real diff.', {
+    describe('Perform a real diff.', {
       var a:String = null;
       var b:String = null;
       
@@ -640,9 +640,9 @@ class TestMisc extends BuddySuite {
       dmp.Diff_Timeout = 0;
       
       it('Simple cases.', {
-        assertEquivalent([[DIFF_DELETE, 'a'], [DIFF_INSERT, 'b']], dmp.diff_main('a', 'b', false));
+        assertEquivalent(([[DIFF_DELETE, 'a'], [DIFF_INSERT, 'b']] : Diff), dmp.diff_main('a', 'b', false));
 
-        assertEquivalent([[DIFF_DELETE, 'Apple'], [DIFF_INSERT, 'Banana'], [DIFF_EQUAL, 's are a'], [DIFF_INSERT, 'lso'], [DIFF_EQUAL, ' fruit.']], dmp.diff_main('Apples are a fruit.', 'Bananas are also fruit.', false));
+        assertEquivalent(([[DIFF_DELETE, 'Apple'], [DIFF_INSERT, 'Banana'], [DIFF_EQUAL, 's are a'], [DIFF_INSERT, 'lso'], [DIFF_EQUAL, ' fruit.']] : Diff), dmp.diff_main('Apples are a fruit.', 'Bananas are also fruit.', false));
       });
 
       it('Invalid escape sequence (\\0).', {
@@ -650,18 +650,21 @@ class TestMisc extends BuddySuite {
       });
 
       it('Overlaps.', {
-        assertEquivalent([[DIFF_DELETE, '1'], [DIFF_EQUAL, 'a'], [DIFF_DELETE, 'y'], [DIFF_EQUAL, 'b'], [DIFF_DELETE, '2'], [DIFF_INSERT, 'xab']], dmp.diff_main('1ayb2', 'abxab', false));
+        assertEquivalent(([[DIFF_DELETE, '1'], [DIFF_EQUAL, 'a'], [DIFF_DELETE, 'y'], [DIFF_EQUAL, 'b'], [DIFF_DELETE, '2'], [DIFF_INSERT, 'xab']] : Diff), dmp.diff_main('1ayb2', 'abxab', false));
 
-        assertEquivalent([[DIFF_INSERT, 'xaxcx'], [DIFF_EQUAL, 'abc'], [DIFF_DELETE, 'y']], dmp.diff_main('abcy', 'xaxcxabc', false));
+        assertEquivalent(([[DIFF_INSERT, 'xaxcx'], [DIFF_EQUAL, 'abc'], [DIFF_DELETE, 'y']] : Diff), dmp.diff_main('abcy', 'xaxcxabc', false));
 
-        assertEquivalent([[DIFF_DELETE, 'ABCD'], [DIFF_EQUAL, 'a'], [DIFF_DELETE, '='], [DIFF_INSERT, '-'], [DIFF_EQUAL, 'bcd'], [DIFF_DELETE, '='], [DIFF_INSERT, '-'], [DIFF_EQUAL, 'efghijklmnopqrs'], [DIFF_DELETE, 'EFGHIJKLMNOefg']], dmp.diff_main('ABCDa=bcd=efghijklmnopqrsEFGHIJKLMNOefg', 'a-bcd-efghijklmnopqrs', false));
+        assertEquivalent(([[DIFF_DELETE, 'ABCD'], [DIFF_EQUAL, 'a'], [DIFF_DELETE, '='], [DIFF_INSERT, '-'], [DIFF_EQUAL, 'bcd'], [DIFF_DELETE, '='], [DIFF_INSERT, '-'], [DIFF_EQUAL, 'efghijklmnopqrs'], [DIFF_DELETE, 'EFGHIJKLMNOefg']] : Diff), dmp.diff_main('ABCDa=bcd=efghijklmnopqrsEFGHIJKLMNOefg', 'a-bcd-efghijklmnopqrs', false));
       });
 
       it('Large equality.', {
-        assertEquivalent([[DIFF_INSERT, ' '], [DIFF_EQUAL, 'a'], [DIFF_INSERT, 'nd'], [DIFF_EQUAL, ' [[Pennsylvania]]'], [DIFF_DELETE, ' and [[New']], dmp.diff_main('a [[Pennsylvania]] and [[New', ' and [[Pennsylvania]]', false));
+        assertEquivalent(([[DIFF_INSERT, ' '], [DIFF_EQUAL, 'a'], [DIFF_INSERT, 'nd'], [DIFF_EQUAL, ' [[Pennsylvania]]'], [DIFF_DELETE, ' and [[New']] : Diff), dmp.diff_main('a [[Pennsylvania]] and [[New', ' and [[Pennsylvania]]', false));
       });
 
       it('Timeout.', {
+        // PENDING
+        
+        /*
         dmp.Diff_Timeout = 0.1;  // 100ms
         a = '`Twas brillig, and the slithy toves\nDid gyre and gimble in the wabe:\nAll mimsy were the borogoves,\nAnd the mome raths outgrabe.\n';
         b = 'I am the very model of a modern major general,\nI\'ve information vegetable, animal, and mineral,\nI know the kings of England, and I quote the fights historical,\nFrom Marathon to Waterloo, in order categorical.\n';
@@ -683,6 +686,8 @@ class TestMisc extends BuddySuite {
         // internal test system.  Whereas browsers take 140 ms.
         //assertTrue(dmp.Diff_Timeout * 1000 * 2 > endTime - startTime);
         // ****
+        
+        */
       });
     });
     
@@ -721,7 +726,7 @@ class TestMisc extends BuddySuite {
           // Exception expected.
         }
       });
-    });*/
+    });
   }
 }
 

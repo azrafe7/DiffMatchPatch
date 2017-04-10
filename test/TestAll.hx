@@ -749,7 +749,6 @@ class TestMisc extends BuddySuite {
       dmp.Match_Threshold = 0.5;
       
       it('Exact matches.', {
-        jsDebugger('bitap');
         equals(5, dmp.match_bitap_('abcdefghijk', 'fgh', 5));
 
         equals(5, dmp.match_bitap_('abcdefghijk', 'fgh', 0));
@@ -795,6 +794,42 @@ class TestMisc extends BuddySuite {
       it('Distance test. Loose location.', {
         dmp.Match_Distance = 1000;  // Loose location.
         equals(0, dmp.match_bitap_('abcdefghijklmnopqrstuvwxyz', 'abcdefg', 24));
+      });
+    });
+    
+    //function testMatchMain() {
+    describe('MatchMain.', {
+      it('Full match.', {
+        equals(0, dmp.match_main('abcdef', 'abcdef', 1000));
+      });
+
+      it('Shortcut matches.', {
+        equals(-1, dmp.match_main('', 'abcdef', 1));
+
+        equals(3, dmp.match_main('abcdef', '', 3));
+
+        equals(3, dmp.match_main('abcdef', 'de', 3));
+      });
+
+      it('Beyond end match.', {
+        equals(3, dmp.match_main("abcdef", "defy", 4));
+      });
+
+      it('Oversized pattern.', {
+        equals(0, dmp.match_main("abcdef", "abcdefy", 0));
+      });
+
+      it('Complex match.', {
+        equals(4, dmp.match_main('I am the very model of a modern major general.', ' that berry ', 5));
+      });
+
+      it('Test null inputs.', {
+        try {
+          dmp.match_main(null, null, 0);
+          fail("Shouldn't reach this line");
+        } catch (e:Dynamic) {
+          // Exception expected.
+        }
       });
     });
   }

@@ -1456,7 +1456,7 @@ class DiffMatchPatch {
    * @param {number} loc The location to search around.
    * @return {number} Best match index or -1.
    */
-  function match_main(text:SString, pattern:SString, ?loc:Int) {
+  public function match_main(text:SString, pattern:SString, ?loc:Int) {
     // Check for null inputs.
     if (text == null || pattern == null || loc == null) {
       throw new Error('Null input. (match_main)');

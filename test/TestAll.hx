@@ -854,6 +854,61 @@ class TestPatch extends BuddySuite {
   var dmp:DiffMatchPatch = new DiffMatchPatch();
   
   public function new() {
+    
+    //function testPatchObj() {
+    describe('PatchObj.', {
+      it('Patch Object.', {
+        var p = new PatchObj();
+        p.start1 = 20;
+        p.start2 = 21;
+        p.length1 = 18;
+        p.length2 = 17;
+        p.diffs = [[DIFF_EQUAL, 'jump'], [DIFF_DELETE, 's'], [DIFF_INSERT, 'ed'], [DIFF_EQUAL, ' over '], [DIFF_DELETE, 'the'], [DIFF_INSERT, 'a'], [DIFF_EQUAL, '\nlaz']];
+        var strp = p.toString();
+        equals('@@ -21,18 +22,17 @@\n jump\n-s\n+ed\n  over \n-the\n+a\n %0Alaz\n', strp);
+      });
+    });
+    
+    //function testPatchFromText() {
+    describe('PatchFromText.', {
+      it('Null case.', {
+        assertEquivalent([], dmp.patch_fromText(null));
+      });
+
+      it('Default cases.', {
+        var strp = '@@ -21,18 +22,17 @@\n jump\n-s\n+ed\n  over \n-the\n+a\n %0Alaz\n';
+        equals(strp, dmp.patch_fromText(strp)[0].toString());
+
+        equals('@@ -1 +1 @@\n-a\n+b\n', dmp.patch_fromText('@@ -1 +1 @@\n-a\n+b\n')[0].toString());
+
+        equals('@@ -1,3 +0,0 @@\n-abc\n', dmp.patch_fromText('@@ -1,3 +0,0 @@\n-abc\n')[0].toString());
+
+        equals('@@ -0,0 +1,3 @@\n+abc\n', dmp.patch_fromText('@@ -0,0 +1,3 @@\n+abc\n')[0].toString());
+      });
+
+      it('Generates error.', {
+        try {
+          dmp.patch_fromText('Bad\nPatch\n');
+          fail("Shouldn't reach this line");
+        } catch (e:Dynamic) {
+          // Exception expected.
+        }
+      });
+    });
+
+    //function testPatchToText() {
+    describe('PatchToText.', {
+      it('Default cases.', {
+        var strp = '@@ -21,18 +22,17 @@\n jump\n-s\n+ed\n  over \n-the\n+a\n  laz\n';
+        var p = dmp.patch_fromText(strp);
+        equals(strp, dmp.patch_toText(p));
+
+        strp = '@@ -1,9 +1,9 @@\n-f\n+F\n oo+fooba\n@@ -7,9 +7,9 @@\n obar\n-,\n+.\n  tes\n';
+        jsDebugger('patch2text');
+        p = dmp.patch_fromText(strp);
+        equals(strp, dmp.patch_toText(p));
+      });
+    });
   }
 }
 

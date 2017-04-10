@@ -39,6 +39,7 @@
  *  - watch for regexes (search for 'match')
  *  - check Date
  *  - encode/decodeURI -> urlEncode/Decode (does haxe urlDecode throw on failing?)
+ *    - haxe uses encodeURICompontent for urlEncode, what we need is a portable encodeURI compatible with js instead!
  *  - watch for fallthroughs in switch cases
  * 
  */
@@ -2114,7 +2115,7 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.patch_obj>} patches Array of Patch objects.
    * @return {string} Text representation of patches.
    */
-  function patch_toText(patches:Array<PatchObj>) {
+  public function patch_toText(patches:Array<PatchObj>):SString {
     var text = [];
     for (x in 0...patches.length) {
       text[x] = patches[x];
@@ -2129,7 +2130,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.patch_obj>} Array of Patch objects.
    * @throws {!Error} If invalid input.
    */
-  function patch_fromText(textline:SString) {
+  public function patch_fromText(textline:SString):Array<PatchObj> {
     var patches = [];
     if (textline.isNullOrEmpty()) {
       return patches;
@@ -2244,7 +2245,7 @@ class PatchObj {
    * @return {string} The GNU diff string.
    */
   //NOTE(hx): check int to str conversions
-  function toString() {
+  public function toString() {
     var coords1, coords2;
     if (this.length1 == 0) {
       coords1 = this.start1 + ',0';

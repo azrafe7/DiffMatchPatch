@@ -1376,7 +1376,7 @@ class DiffMatchPatch {
     for (x in 0...diffs.length) {
       switch (diffs[x][0]) {
         case DIFF_INSERT:
-          text[x] = '+' + StringTools.urlEncode(diffs[x][1]); //NOTE(hx): encodeURI -> urlEncode
+          text[x] = '+' + Internal.encodeURI(diffs[x][1]); //NOTE(hx): encodeURI -> urlEncode
           //break;
         case DIFF_DELETE:
           text[x] = '-' + diffs[x][1].length;
@@ -1410,7 +1410,7 @@ class DiffMatchPatch {
       switch (tokens[x].charAt(0)) {
         case '+':
           try {
-            diffs[diffsLength++] = new SingleDiff(DIFF_INSERT, StringTools.urlDecode(param)); //NOTE(hx): decodeURI -> urlDecode
+            diffs[diffsLength++] = new SingleDiff(DIFF_INSERT, Internal.decodeURI(param)); //NOTE(hx): decodeURI -> urlDecode
           } catch (ex:Dynamic) {
             // Malformed URI sequence.
             throw new Error('Illegal escape in diff_fromDelta: ' + param);
@@ -2172,7 +2172,7 @@ class DiffMatchPatch {
         var sign = text[textPointer].charAt(0);
         var line = "";
         try {
-          line = StringTools.urlDecode(text[textPointer].substring(1)); //NOTE(hx): decodeURI -> urlDecode (throw? - move line outside)
+          line = Internal.decodeURI(text[textPointer].substring(1)); //NOTE(hx): decodeURI -> urlDecode (throw? - move line outside)
         } catch (ex:Dynamic) {
           // Malformed URI sequence.
           throw new Error('Illegal escape in patch_fromText: ' + /*line*/text[textPointer].substring(1));
@@ -2276,7 +2276,7 @@ class PatchObj {
           op = ' ';
           //break;
       }
-      text[x + 1] = op + StringTools.urlEncode(this.diffs[x][1]) + '\n'; //NOTE(hx): encodeURI -> urlEncode
+      text[x + 1] = op + Internal.encodeURI(this.diffs[x][1]) + '\n'; //NOTE(hx): encodeURI -> urlEncode
     }
     return ~/%20/g.replace(text.join(''), ' ');
   };
@@ -2471,6 +2471,24 @@ class Internal {
       array.insert(start + i, insert[i]);
     }
     return deleted;
+  }
+  
+  @:noUsing
+  static public function encodeURI(s:SString):SString {
+  #if (js)
+    return untyped __js__('encodeURI({0})', s);
+  #else
+    return StringTools.urlEncode(s);
+  #end
+  }
+  
+  @:noUsing
+  static public function decodeURI(s:SString):SString {
+  #if (js)
+    return untyped __js__('decodeURI({0})', s);
+  #else
+    return StringTools.urlDecode(s);
+  #end
   }
 }
 

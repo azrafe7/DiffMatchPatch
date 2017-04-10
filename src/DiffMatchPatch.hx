@@ -1488,7 +1488,7 @@ class DiffMatchPatch {
    * @return {number} Best match index or -1.
    * @private
    */
-  function match_bitap_(text:SString, pattern:SString, loc) {
+  public function match_bitap_(text:SString, pattern:SString, loc:Int):Int {
     if (pattern.length > this.Match_MaxBits) {
       throw new Error('Pattern too long for this browser.');
     }
@@ -1506,7 +1506,7 @@ class DiffMatchPatch {
      * @return {number} Overall score for match (0.0 = good, 1.0 = bad).
      * @private
      */
-    function match_bitapScore_(e, x) {
+    function match_bitapScore_(e:Int, x:Int):Float {
       var accuracy = e / pattern.length;
       var proximity = Std.int(Math.abs(loc - x));
       if (dmp.Match_Distance == 0) {
@@ -1516,6 +1516,8 @@ class DiffMatchPatch {
       return accuracy + (proximity / dmp.Match_Distance);
     }
 
+    //NOTE(hx): save text.length, so we don't need to look it up later (this is to fix cases like "abc".charAt(5) below, which yelds "" in js)
+    var textLength = text.length;
     // Highest score beyond which we give up.
     var score_threshold = this.Match_Threshold;
     // Is there a nearby exact match? (speedup)
@@ -1535,7 +1537,7 @@ class DiffMatchPatch {
     best_loc = -1;
 
     var bin_min, bin_mid;
-    var bin_max = pattern.length + text.length;
+    var bin_max = pattern.length + textLength;
     var last_rd:NullIntArray = null; //NOTE(hx): init first
     //NOTE(hx): nested loops
     for (d in 0...pattern.length) {
@@ -1555,16 +1557,18 @@ class DiffMatchPatch {
       // Use the result from this iteration as the maximum for the next.
       bin_max = bin_mid;
       var start = Std.int(Math.max(1, loc - bin_mid + 1));
-      var finish = Std.int(Math.min(loc + bin_mid, text.length)) + pattern.length;
+      var finish = Std.int(Math.min(loc + bin_mid, textLength)) + pattern.length;
 
-      var rd:NullIntArray = [for (i in 0...finish + 2 + 1) null]; //NOTE(hx): init array by length
+      var rd:NullIntArray = [for (i in 0...finish + 2) null]; //NOTE(hx): init array by length
       rd[finish + 1] = (1 << d) - 1;
       var j = finish;
       //for (var j = finish; j >= start; j--) {
       while (j >= start) {
         // The alphabet (s) is a sparse hash, so the following line generates
         // warnings.
-        var charMatch = s[text.charAt(j - 1)];
+        //NOTE(hx): set it to 0 when null, or indexed out of bounds
+        var charMatch = (j - 1 < textLength) ? s[text.charAt(j - 1)] : 0;
+        if (charMatch == null) charMatch = 0;
         if (d == 0) {  // First pass: exact match.
           rd[j] = ((rd[j + 1] << 1) | 1) & charMatch;
         } else {  // Subsequent passes: fuzzy match.
@@ -1572,7 +1576,10 @@ class DiffMatchPatch {
                   (((last_rd[j + 1] | last_rd[j]) << 1) | 1) |
                   last_rd[j + 1];
         }
-        if (((rd[j] != null).boolAsInt() & matchmask) != 0) { //NOTE(hx): check conditional
+        //NOTE(hx): check conditional
+        var rdj = rd[j];
+        if (rdj == null) rdj = 0;
+        if ((rdj & matchmask) != 0) { 
           var score = match_bitapScore_(d, j - 1);
           // This match will almost certainly be better than any existing match.
           // But check anyway.
@@ -1608,7 +1615,7 @@ class DiffMatchPatch {
    * @return {!Object} Hash of character locations.
    * @private
    */
-  function match_alphabet_(pattern:SString) {
+  public function match_alphabet_(pattern:SString) {
     var s = new Map<SString, Int>(); //NOTE(hx): mmmhh... 
     for (i in 0...pattern.length) {
       s[pattern.charAt(i)] = 0;
@@ -2421,6 +2428,8 @@ abstract SString(String) from String to String {
     //NOTE(hx): this is necessary for 'hitting end' test (involves diff_cleanupSemanticLossless), 
     //          as in js "".charAt(0) == "", while elsewhere results in an exception being thrown.
     //          Ooohh... you never stop learning: in js "123".charAt(-1) also equals "".
+    //          This is also true when you go the other way ("123".charAt(12)), but it's too expensive
+    //          to check for length in here.
     if (this == "" || i < 0) return "";
     return Unifill.uCharAt(this, i);
   }

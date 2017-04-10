@@ -727,6 +727,76 @@ class TestMisc extends BuddySuite {
         }
       });
     });
+
+// MATCH TEST FUNCTIONS
+
+    //function testMatchAlphabet() {
+    describe('MatchAlphabet.', {  
+      // Initialise the bitmasks for Bitap.
+      it('Unique.', {
+        assertEquivalent( [ 'a'=>4, 'b'=>2, 'c'=>1 ], dmp.match_alphabet_('abc'));
+      });
+
+      it('Duplicates.', {
+        assertEquivalent( [ 'a'=>37, 'b'=>18, 'c'=>8 ], dmp.match_alphabet_('abcaba'));
+      });
+    });
+
+    //function testMatchBitap() {
+    describe('MatchBitap.', {
+      // Bitap algorithm.
+      dmp.Match_Distance = 100;
+      dmp.Match_Threshold = 0.5;
+      
+      it('Exact matches.', {
+        jsDebugger('bitap');
+        equals(5, dmp.match_bitap_('abcdefghijk', 'fgh', 5));
+
+        equals(5, dmp.match_bitap_('abcdefghijk', 'fgh', 0));
+      });
+
+      it('Fuzzy matches.', {
+        equals(4, dmp.match_bitap_('abcdefghijk', 'efxhi', 0));
+
+        equals(2, dmp.match_bitap_('abcdefghijk', 'cdefxyhijk', 5));
+
+        equals(-1, dmp.match_bitap_('abcdefghijk', 'bxy', 1));
+      });
+
+      it('Overflow.', {
+        equals(2, dmp.match_bitap_('123456789xx0', '3456789x0', 2));
+      });
+
+      it('Threshold test.', {
+        dmp.Match_Threshold = 0.4;
+        equals(4, dmp.match_bitap_('abcdefghijk', 'efxyhi', 1));
+
+        dmp.Match_Threshold = 0.3;
+        equals(-1, dmp.match_bitap_('abcdefghijk', 'efxyhi', 1));
+
+        dmp.Match_Threshold = 0.0;
+        equals(1, dmp.match_bitap_('abcdefghijk', 'bcdef', 1));
+        dmp.Match_Threshold = 0.5;
+      });
+
+      it('Multiple select.', {
+        equals(0, dmp.match_bitap_('abcdexyzabcde', 'abccde', 3));
+
+        equals(8, dmp.match_bitap_('abcdexyzabcde', 'abccde', 5));
+      });
+
+      it('Distance test. Strict location.', {
+        dmp.Match_Distance = 10;  // Strict location.
+        equals(-1, dmp.match_bitap_('abcdefghijklmnopqrstuvwxyz', 'abcdefg', 24));
+
+        equals(0, dmp.match_bitap_('abcdefghijklmnopqrstuvwxyz', 'abcdxxefg', 1));
+      });
+
+      it('Distance test. Loose location.', {
+        dmp.Match_Distance = 1000;  // Loose location.
+        equals(0, dmp.match_bitap_('abcdefghijklmnopqrstuvwxyz', 'abcdefg', 24));
+      });
+    });
   }
 }
 

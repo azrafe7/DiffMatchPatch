@@ -32,7 +32,9 @@ using unifill.Unifill;
 
 @reporter("MochaReporter")
 class TestAll implements Buddy <[
-    TestMisc, 
+    TestDiff, 
+    TestMatch, 
+    TestPatch, 
   ]> { 
 
   
@@ -49,7 +51,9 @@ class TestAll implements Buddy <[
     var reporter = new MochaReporter();
   
     var runner = new SuitesRunner([
-      new TestMisc(), 
+      new TestDiff(), 
+      new TestMatch(), 
+      new TestPatch(), 
     ], reporter);
     
     
@@ -63,7 +67,7 @@ class TestAll implements Buddy <[
 
 
 // DIFF TEST FUNCTIONS
-class TestMisc extends BuddySuite {
+class TestDiff extends BuddySuite {
   
   var dmp:DiffMatchPatch = new DiffMatchPatch();
   
@@ -727,8 +731,16 @@ class TestMisc extends BuddySuite {
         }
       });
     });
+  }
+}
+
 
 // MATCH TEST FUNCTIONS
+class TestMatch extends BuddySuite {
+  
+  var dmp:DiffMatchPatch = new DiffMatchPatch();
+  
+  public function new() {
 
     //function testMatchAlphabet() {
     describe('MatchAlphabet.', {  
@@ -834,6 +846,17 @@ class TestMisc extends BuddySuite {
     });
   }
 }
+
+
+// PATCH TEST FUNCTIONS
+class TestPatch extends BuddySuite {
+  
+  var dmp:DiffMatchPatch = new DiffMatchPatch();
+  
+  public function new() {
+  }
+}
+
 
 /*
 // DIFF TEST FUNCTIONS

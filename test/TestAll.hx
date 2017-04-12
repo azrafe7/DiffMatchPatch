@@ -974,6 +974,7 @@ class TestPatch extends BuddySuite {
       });
 
       it('Text1+Diff inputs.', {
+        jsDebugger('text1+diff input');
         var patches = dmp.patch_make(text1, diffs);
         equals(expectedPatch, dmp.patch_toText(patches));
       });

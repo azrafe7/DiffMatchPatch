@@ -1703,7 +1703,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.patch_obj>} Array of Patch objects.
    */
   //NOTE(hx): this is a bit problematic (either types / casts)
-  public function patch_make(a:Any, ?opt_b, ?opt_c) {
+  public function patch_make(a:Dynamic, ?opt_b:Dynamic, ?opt_c:Dynamic) {
     var text1:SString, diffs:Diff;
     if (Std.is(a, String) && Std.is(opt_b, String) &&
         opt_c == null) {
@@ -1715,20 +1715,20 @@ class DiffMatchPatch {
         this.diff_cleanupSemantic(diffs);
         this.diff_cleanupEfficiency(diffs);
       }
-    } else if (a != null && Std.is(a, Diff) && opt_b == null &&
+    } else if (a != null && Std.is(a, /*Diff*/Array) && opt_b == null &&
         opt_c == null) {
       // Method 2: diffs
       // Compute text1 from diffs.
       //NOTE(hx): recheck this as is seems to be problematic
       diffs = /** @type {!Array.<!diff_match_patch.Diff>} */(cast a);
       text1 = this.diff_text1(diffs);
-    } else if (Std.is(a, String) && opt_b != null && Std.is(opt_b, Diff) &&
+    } else if (Std.is(a, String) && opt_b != null && Std.is(opt_b, /*Diff*/Array) &&
         opt_c == null) {
       // Method 3: text1, diffs
       text1 = /** @type {string} */(cast a);
       diffs = /** @type {!Array.<!diff_match_patch.Diff>} */(cast opt_b);
     } else if (Std.is(a, String) && Std.is(opt_b, String) &&
-        opt_c != null && Std.is(opt_c, Diff)) {
+        opt_c != null && Std.is(opt_c, /*Diff*/Array)) {
       // Method 4: text1, text2, diffs
       // text2 is not used.
       text1 = /** @type {string} */(cast a);

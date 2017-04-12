@@ -1,3 +1,22 @@
+### Google-DiffMatchPath
+
+hxperimental port of google-diff-match-patch to pure haxe. Still WIP.
+
+#### Why
+
+Well... google-diff-match-patch already has various semi-official ports in different languages,
+and you would surely have a better chance to have a finished/usable product by using them directly, 
+or writing haxe externs for them.
+
+But I wanted to challenge myself and my knowledge of haxe, so here's it...
+
+So **still WIP**, but I feel I'm getting there and learning more of haxe while I go (especially the nuances vs js).
+
+-----
+
+
+### **Original README:**
+
 # Diff, Match and Patch
 
 This is a mirror/fork of the [Diff, Match and Patch Library](http://code.google.com/p/google-diff-match-patch/) by Neil Fraser.

@@ -906,11 +906,229 @@ class TestPatch extends BuddySuite {
         equals(strp, dmp.patch_toText(p));
 
         strp = '@@ -1,9 +1,9 @@\n-f\n+F\n oo+fooba\n@@ -7,9 +7,9 @@\n obar\n-,\n+.\n  tes\n';
-        jsDebugger('patch2text');
         p = dmp.patch_fromText(strp);
         equals(strp, dmp.patch_toText(p));
       });
     });
+    
+    //function testPatchAddContext() {
+    describe('PatchAddContext.', {
+      dmp.Patch_Margin = 4;
+      var p;
+      
+      it('Default case.', {
+        p = dmp.patch_fromText('@@ -21,4 +21,10 @@\n-jump\n+somersault\n')[0];
+        dmp.patch_addContext_(p, 'The quick brown fox jumps over the lazy dog.');
+        equals('@@ -17,12 +17,18 @@\n fox \n-jump\n+somersault\n s ov\n', p.toString());
+      });
+
+      it('Same, but not enough trailing context.', {
+        p = dmp.patch_fromText('@@ -21,4 +21,10 @@\n-jump\n+somersault\n')[0];
+        dmp.patch_addContext_(p, 'The quick brown fox jumps.');
+        equals('@@ -17,10 +17,16 @@\n fox \n-jump\n+somersault\n s.\n', p.toString());
+      });
+
+      it('Same, but not enough leading context.', {
+        p = dmp.patch_fromText('@@ -3 +3,2 @@\n-e\n+at\n')[0];
+        dmp.patch_addContext_(p, 'The quick brown fox jumps.');
+        equals('@@ -1,7 +1,8 @@\n Th\n-e\n+at\n  qui\n', p.toString());
+      });
+
+      it('Same, but with ambiguity.', {
+        p = dmp.patch_fromText('@@ -3 +3,2 @@\n-e\n+at\n')[0];
+        dmp.patch_addContext_(p, 'The quick brown fox jumps.  The quick brown fox crashes.');
+        equals('@@ -1,27 +1,28 @@\n Th\n-e\n+at\n  quick brown fox jumps. \n', p.toString());
+      });
+    });
+
+    //function testPatchMake() {
+    describe('PatchMake.', {
+      var text1:SString = 'The quick brown fox jumps over the lazy dog.';
+      var text2:SString = 'That quick brown fox jumped over a lazy dog.';
+      var expectedPatch:SString = null;
+      var diffs:Diff;
+      
+      it('Null case.', {
+        var patches = dmp.patch_make('', '');
+        equals('', dmp.patch_toText(patches));
+      });
+
+      it('Text2+Text1 inputs.', {
+        jsDebugger('patch make');
+        expectedPatch = '@@ -1,8 +1,7 @@\n Th\n-at\n+e\n  qui\n@@ -21,17 +21,18 @@\n jump\n-ed\n+s\n  over \n-a\n+the\n  laz\n';
+        // The second patch must be "-21,17 +21,18", not "-22,17 +21,18" due to rolling context.
+        var patches = dmp.patch_make(text2, text1);
+        equals(expectedPatch, dmp.patch_toText(patches));
+      });
+
+      it('Text1+Text2 inputs.', {
+        expectedPatch = '@@ -1,11 +1,12 @@\n Th\n-e\n+at\n  quick b\n@@ -22,18 +22,17 @@\n jump\n-s\n+ed\n  over \n-the\n+a\n  laz\n';
+        var patches = dmp.patch_make(text1, text2);
+        equals(expectedPatch, dmp.patch_toText(patches));
+      });
+
+      it('Diff input.', {
+        diffs = dmp.diff_main(text1, text2, false);
+        var patches = dmp.patch_make(diffs);
+        equals(expectedPatch, dmp.patch_toText(patches));
+      });
+
+      it('Text1+Diff inputs.', {
+        var patches = dmp.patch_make(text1, diffs);
+        equals(expectedPatch, dmp.patch_toText(patches));
+      });
+
+      it('Text1+Text2+Diff inputs (deprecated).', {
+        var patches = dmp.patch_make(text1, text2, diffs);
+        equals(expectedPatch, dmp.patch_toText(patches));
+      });
+
+      it('Character encoding.', {
+        var patches = dmp.patch_make('`1234567890-=[]\\;\',./', '~!@#$%^&*()_+{}|:"<>?');
+        equals('@@ -1,21 +1,21 @@\n-%601234567890-=%5B%5D%5C;\',./\n+~!@#$%25%5E&*()_+%7B%7D%7C:%22%3C%3E?\n', dmp.patch_toText(patches));
+      });
+
+      it('Character decoding.', {
+        var diffs:Diff = [[DIFF_DELETE, '`1234567890-=[]\\;\',./'], [DIFF_INSERT, '~!@#$%^&*()_+{}|:"<>?']];
+        assertEquivalent(diffs, dmp.patch_fromText('@@ -1,21 +1,21 @@\n-%601234567890-=%5B%5D%5C;\',./\n+~!@#$%25%5E&*()_+%7B%7D%7C:%22%3C%3E?\n')[0].diffs);
+      });
+
+      it('Long string with repeats.', {
+        text1 = '';
+        for (x in 0...100) {
+          text1 += 'abcdef';
+        }
+        text2 = text1 + '123';
+        var expectedPatch = '@@ -573,28 +573,31 @@\n cdefabcdefabcdefabcdefabcdef\n+123\n';
+        var patches = dmp.patch_make(text1, text2);
+        equals(expectedPatch, dmp.patch_toText(patches));
+      });
+
+      it('Test null inputs.', {
+        try {
+          dmp.patch_make(null);
+          fail("Shouldn't reach this line");
+        } catch (e:Dynamic) {
+          // Exception expected.
+        }
+      });
+    });
+
+    /*function testPatchSplitMax() {
+      // Assumes that dmp.Match_MaxBits is 32.
+      var patches = dmp.patch_make('abcdefghijklmnopqrstuvwxyz01234567890', 'XabXcdXefXghXijXklXmnXopXqrXstXuvXwxXyzX01X23X45X67X89X0');
+      dmp.patch_splitMax(patches);
+      assertEquals('@@ -1,32 +1,46 @@\n+X\n ab\n+X\n cd\n+X\n ef\n+X\n gh\n+X\n ij\n+X\n kl\n+X\n mn\n+X\n op\n+X\n qr\n+X\n st\n+X\n uv\n+X\n wx\n+X\n yz\n+X\n 012345\n@@ -25,13 +39,18 @@\n zX01\n+X\n 23\n+X\n 45\n+X\n 67\n+X\n 89\n+X\n 0\n', dmp.patch_toText(patches));
+
+      patches = dmp.patch_make('abcdef1234567890123456789012345678901234567890123456789012345678901234567890uvwxyz', 'abcdefuvwxyz');
+      var oldToText = dmp.patch_toText(patches);
+      dmp.patch_splitMax(patches);
+      assertEquals(oldToText, dmp.patch_toText(patches));
+
+      patches = dmp.patch_make('1234567890123456789012345678901234567890123456789012345678901234567890', 'abc');
+      dmp.patch_splitMax(patches);
+      assertEquals('@@ -1,32 +1,4 @@\n-1234567890123456789012345678\n 9012\n@@ -29,32 +1,4 @@\n-9012345678901234567890123456\n 7890\n@@ -57,14 +1,3 @@\n-78901234567890\n+abc\n', dmp.patch_toText(patches));
+
+      patches = dmp.patch_make('abcdefghij , h : 0 , t : 1 abcdefghij , h : 0 , t : 1 abcdefghij , h : 0 , t : 1', 'abcdefghij , h : 1 , t : 1 abcdefghij , h : 1 , t : 1 abcdefghij , h : 0 , t : 1');
+      dmp.patch_splitMax(patches);
+      assertEquals('@@ -2,32 +2,32 @@\n bcdefghij , h : \n-0\n+1\n  , t : 1 abcdef\n@@ -29,32 +29,32 @@\n bcdefghij , h : \n-0\n+1\n  , t : 1 abcdef\n', dmp.patch_toText(patches));
+    }
+
+    function testPatchAddPadding() {
+      // Both edges full.
+      var patches = dmp.patch_make('', 'test');
+      assertEquals('@@ -0,0 +1,4 @@\n+test\n', dmp.patch_toText(patches));
+      dmp.patch_addPadding(patches);
+      assertEquals('@@ -1,8 +1,12 @@\n %01%02%03%04\n+test\n %01%02%03%04\n', dmp.patch_toText(patches));
+
+      // Both edges partial.
+      patches = dmp.patch_make('XY', 'XtestY');
+      assertEquals('@@ -1,2 +1,6 @@\n X\n+test\n Y\n', dmp.patch_toText(patches));
+      dmp.patch_addPadding(patches);
+      assertEquals('@@ -2,8 +2,12 @@\n %02%03%04X\n+test\n Y%01%02%03\n', dmp.patch_toText(patches));
+
+      // Both edges none.
+      patches = dmp.patch_make('XXXXYYYY', 'XXXXtestYYYY');
+      assertEquals('@@ -1,8 +1,12 @@\n XXXX\n+test\n YYYY\n', dmp.patch_toText(patches));
+      dmp.patch_addPadding(patches);
+      assertEquals('@@ -5,8 +5,12 @@\n XXXX\n+test\n YYYY\n', dmp.patch_toText(patches));
+    }
+
+    function testPatchApply() {
+      dmp.Match_Distance = 1000;
+      dmp.Match_Threshold = 0.5;
+      dmp.Patch_DeleteThreshold = 0.5;
+      // Null case.
+      var patches = dmp.patch_make('', '');
+      var results = dmp.patch_apply(patches, 'Hello world.');
+      assertEquivalent(['Hello world.', []], results);
+
+      // Exact match.
+      patches = dmp.patch_make('The quick brown fox jumps over the lazy dog.', 'That quick brown fox jumped over a lazy dog.');
+      results = dmp.patch_apply(patches, 'The quick brown fox jumps over the lazy dog.');
+      assertEquivalent(['That quick brown fox jumped over a lazy dog.', [true, true]], results);
+
+      // Partial match.
+      results = dmp.patch_apply(patches, 'The quick red rabbit jumps over the tired tiger.');
+      assertEquivalent(['That quick red rabbit jumped over a tired tiger.', [true, true]], results);
+
+      // Failed match.
+      results = dmp.patch_apply(patches, 'I am the very model of a modern major general.');
+      assertEquivalent(['I am the very model of a modern major general.', [false, false]], results);
+
+      // Big delete, small change.
+      patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
+      results = dmp.patch_apply(patches, 'x123456789012345678901234567890-----++++++++++-----123456789012345678901234567890y');
+      assertEquivalent(['xabcy', [true, true]], results);
+
+      // Big delete, big change 1.
+      patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
+      results = dmp.patch_apply(patches, 'x12345678901234567890---------------++++++++++---------------12345678901234567890y');
+      assertEquivalent(['xabc12345678901234567890---------------++++++++++---------------12345678901234567890y', [false, true]], results);
+
+      // Big delete, big change 2.
+      dmp.Patch_DeleteThreshold = 0.6;
+      patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
+      results = dmp.patch_apply(patches, 'x12345678901234567890---------------++++++++++---------------12345678901234567890y');
+      assertEquivalent(['xabcy', [true, true]], results);
+      dmp.Patch_DeleteThreshold = 0.5;
+
+      // Compensate for failed patch.
+      dmp.Match_Threshold = 0.0;
+      dmp.Match_Distance = 0;
+      patches = dmp.patch_make('abcdefghijklmnopqrstuvwxyz--------------------1234567890', 'abcXXXXXXXXXXdefghijklmnopqrstuvwxyz--------------------1234567YYYYYYYYYY890');
+      results = dmp.patch_apply(patches, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ--------------------1234567890');
+      assertEquivalent(['ABCDEFGHIJKLMNOPQRSTUVWXYZ--------------------1234567YYYYYYYYYY890', [false, true]], results);
+      dmp.Match_Threshold = 0.5;
+      dmp.Match_Distance = 1000;
+
+      // No side effects.
+      patches = dmp.patch_make('', 'test');
+      var patchstr = dmp.patch_toText(patches);
+      dmp.patch_apply(patches, '');
+      assertEquals(patchstr, dmp.patch_toText(patches));
+
+      // No side effects with major delete.
+      patches = dmp.patch_make('The quick brown fox jumps over the lazy dog.', 'Woof');
+      patchstr = dmp.patch_toText(patches);
+      dmp.patch_apply(patches, 'The quick brown fox jumps over the lazy dog.');
+      assertEquals(patchstr, dmp.patch_toText(patches));
+
+      // Edge exact match.
+      patches = dmp.patch_make('', 'test');
+      results = dmp.patch_apply(patches, '');
+      assertEquivalent(['test', [true]], results);
+
+      // Near edge exact match.
+      patches = dmp.patch_make('XY', 'XtestY');
+      results = dmp.patch_apply(patches, 'XY');
+      assertEquivalent(['XtestY', [true]], results);
+
+      // Edge partial match.
+      patches = dmp.patch_make('y', 'y123');
+      results = dmp.patch_apply(patches, 'x');
+      assertEquivalent(['x123', [true]], results);
+    }*/
   }
 }
 

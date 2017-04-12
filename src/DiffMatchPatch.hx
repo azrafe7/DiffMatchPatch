@@ -1639,7 +1639,7 @@ class DiffMatchPatch {
    * @param {string} text Source text.
    * @private
    */
-  function patch_addContext_(patch, text:SString) {
+  public function patch_addContext_(patch:PatchObj, text:SString) {
     if (text.length == 0) {
       return;
     }
@@ -1660,12 +1660,12 @@ class DiffMatchPatch {
 
     //NOTE(hx): double check 2 casts below
     // Add the prefix.
-    var prefix:SString = cast text.substring(patch.start2 - padding, patch.start2);
+    var prefix:SString = text.substring(patch.start2 - padding, patch.start2);
     if (!Internal.isNullOrEmpty(prefix)) {
       patch.diffs.unshift(new SingleDiff(DIFF_EQUAL, prefix));
     }
     // Add the suffix.
-    var suffix:SString = cast text.substring(patch.start2 + patch.length1,
+    var suffix:SString = text.substring(patch.start2 + patch.length1,
                                 patch.start2 + patch.length1 + padding);
     if (!Internal.isNullOrEmpty(suffix)) {
       patch.diffs.push(new SingleDiff(DIFF_EQUAL, suffix));
@@ -1703,8 +1703,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.patch_obj>} Array of Patch objects.
    */
   //NOTE(hx): this is a bit problematic (either types / casts)
-  function patch_make(a, opt_b, opt_c) {
-    throw("not ready yet!!");
+  public function patch_make(a:Any, ?opt_b, ?opt_c) {
     var text1:SString, diffs:Diff;
     if (Std.is(a, String) && Std.is(opt_b, String) &&
         opt_c == null) {
@@ -1777,7 +1776,7 @@ class DiffMatchPatch {
           //break;
         case DIFF_EQUAL:
           //NOTE(hx): double check
-          if ((diff_text.length <= 2).boolAsInt() * this.Patch_Margin != 0 &&
+          if ((diff_text.length <= 2 * this.Patch_Margin) &&
               patchDiffLength != 0 && diffs.length != x + 1) {
             // Small equality inside a patch.
             patch.diffs[patchDiffLength++] = diffs[x];

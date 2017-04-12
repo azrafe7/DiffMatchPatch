@@ -42,6 +42,16 @@
  *    - haxe uses encodeURICompontent for urlEncode, what we need is a portable encodeURI compatible with js instead!
  *  - watch for fallthroughs in switch cases
  * 
+ *  - for now it's IMPORTANT to cast dynArrays down to the wanted/expected types, or manually type them ahead of usage.
+ *    Examples (GOOD): 
+ *      var diffs:Diff = [[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']]
+ *      ([[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']] : Diff)
+ *      (['xabcy', [true, true]] : MergePatch)
+ *      etc.
+ * 
+ *    And NOT use (BAD):
+ *      [[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']]
+ *      ['xabcy', [true, true]]
  */
 
 import unifill.CodePoint;
@@ -1703,6 +1713,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.patch_obj>} Array of Patch objects.
    */
   //NOTE(hx): this is a bit problematic (either types / casts)
+  //          Also note that the haxe compiler could swap out opt_b with opt_c when one it's specified but the other is not!
   public function patch_make(a:Dynamic, ?opt_b:Dynamic, ?opt_c:Dynamic) {
     var text1:SString, diffs:Diff;
     if (Std.is(a, String) && Std.is(opt_b, String) &&
@@ -1852,9 +1863,9 @@ class DiffMatchPatch {
    *      new text and an array of boolean values.
    */
   //NOTE(hx): introduce new type MergePatch (might need to rename it later)
-  function patch_apply(patches:Array<PatchObj>, text:SString):Array<MergePatch> {
+  public function patch_apply(patches:Array<PatchObj>, text:SString):MergePatch {
     if (patches.length == 0) {
-      return [new MergePatch(text, [])];
+      return new MergePatch(text, []);
     }
 
     // Deep copy the patches so that no changes are made to originals.
@@ -1869,7 +1880,7 @@ class DiffMatchPatch {
     // 20, but the first patch was found at 12, delta is 2 and the second patch
     // has an effective expected position of 22.
     var delta = 0;
-    var results = [];
+    var results:Array<Bool> = [];
     for (x in 0...patches.length) {
       var expected_loc = patches[x].start2 + delta;
       var text1 = this.diff_text1(patches[x].diffs);
@@ -1948,7 +1959,7 @@ class DiffMatchPatch {
     }
     // Strip the padding off.
     text = text.substring(nullPadding.length, text.length - nullPadding.length);
-    return [new MergePatch(text, results)];
+    return new MergePatch(text, results);
   };
 
 
@@ -1958,7 +1969,7 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.patch_obj>} patches Array of Patch objects.
    * @return {string} The padding string added to each side.
    */
-  function patch_addPadding(patches:Array<PatchObj>):SString {
+  public function patch_addPadding(patches:Array<PatchObj>):SString {
     var paddingLength = this.Patch_Margin;
     var nullPadding = '';
     //NOTE(hx): <= in loop
@@ -2018,7 +2029,7 @@ class DiffMatchPatch {
    * Intended to be called only from within patch_apply.
    * @param {!Array.<!diff_match_patch.patch_obj>} patches Array of Patch objects.
    */
-  function patch_splitMax(patches:Array<PatchObj>) {
+  public function patch_splitMax(patches:Array<PatchObj>) {
     var patch_size = this.Match_MaxBits;
     //NOTE(hx): loops with continue. Converted to while as loop variable is modified
     var x = 0;
@@ -2283,17 +2294,6 @@ class PatchObj {
 }
 
 
-class MergePatch {
-  
-  public var text:SString;
-  public var boolValues:Array<Bool>;
-  
-  public function new(newText:String, boolValues:Array<Bool>):Void {
-    this.text = newText;
-    this.boolValues = boolValues;
-  }
-}
-
 /**
  * The data structure representing a diff is an array of tuples:
  * [[DIFF_DELETE, 'Hello'], [DIFF_INSERT, 'Goodbye'], [DIFF_EQUAL, ' world.']]
@@ -2365,6 +2365,8 @@ class SingleDiffData {
   }
 }
 
+
+
 @:enum abstract DiffOp(Int) {
   var DIFF_DELETE = -1;
   var DIFF_INSERT = 1;
@@ -2377,6 +2379,8 @@ typedef LinesToCharsObj = {
   var chars2:SString;
   var lineArray:Array<SString>;
 }
+
+
 
 @:native("SString")
 @:forward
@@ -2441,11 +2445,13 @@ abstract SString(String) from String to String {
 }
 
 
+
 abstract Error(String) from String to String {
   inline public function new(s:String) {
     this = s;
   }
 }
+
 
 
 @:allow(DiffMatchPatch)
@@ -2517,6 +2523,8 @@ class Internal {
   }
 }
 
+
+
 @:forward
 abstract NullIntArray(Array<Null<Int>>) from Array<Null<Int>> {
   
@@ -2533,5 +2541,42 @@ abstract NullIntArray(Array<Null<Int>>) from Array<Null<Int>> {
     if (value == null) throw "setting null";
   #end
     return this[idx] = value;
+  }
+}
+
+
+
+@:native("MergePatch")
+abstract MergePatch(MergePatchData) from MergePatchData {
+  
+  inline public function new(newText:SString, boolValues:Array<Bool>):Void {
+    this = new MergePatchData(newText, boolValues);
+  }
+  
+  inline public function toString() {
+    return this.toString();
+  }
+  
+  @:from static function fromDynArray(dynArray:Array<Dynamic>):MergePatch {
+  #if debug
+    if (dynArray.length != 2) throw 'dynArray must be of length 2, it was $dynArray';
+  #end
+    return new MergePatch(dynArray[0], dynArray[1]);
+  }
+}
+
+
+@:structInit
+class MergePatchData {
+  public var text:SString;
+  public var boolValues:Array<Bool>;
+  
+  public function new(newText:SString, boolValues:Array<Bool>):Void {
+    this.text = newText;
+    this.boolValues = boolValues;
+  }
+  
+  public function toString() {
+    return '[' + this.text + ',' + this.boolValues + ']';
   }
 }

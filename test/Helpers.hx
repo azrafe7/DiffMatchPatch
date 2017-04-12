@@ -29,10 +29,12 @@ class Helpers {
   }
 
   // If expected and actual are the equivalent, pass the test.
-  //NOTE(hx): msg has been repositioned as last arg! And we're using Dynamic
+  //NOTE(hx): msg has been repositioned as last arg! And we're using Dynamic,
+  //          and Assert.same() instead of porting _equivalent()!!
   static public function assertEquivalent(expected:Dynamic, actual:Dynamic, ?msg) {
     if (msg == null) msg = 'Expected: \'' + expected + '\' Actual: \'' + actual + '\'';
     same(expected, actual, true, msg);
+    
     /*if (_equivalent(expected, actual)) {
       equals(msg, String.toString(expected), String.toString(actual));
     } else {

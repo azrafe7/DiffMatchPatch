@@ -1015,121 +1015,157 @@ class TestPatch extends BuddySuite {
       });
     });
 
-    /*function testPatchSplitMax() {
-      // Assumes that dmp.Match_MaxBits is 32.
-      var patches = dmp.patch_make('abcdefghijklmnopqrstuvwxyz01234567890', 'XabXcdXefXghXijXklXmnXopXqrXstXuvXwxXyzX01X23X45X67X89X0');
-      dmp.patch_splitMax(patches);
-      assertEquals('@@ -1,32 +1,46 @@\n+X\n ab\n+X\n cd\n+X\n ef\n+X\n gh\n+X\n ij\n+X\n kl\n+X\n mn\n+X\n op\n+X\n qr\n+X\n st\n+X\n uv\n+X\n wx\n+X\n yz\n+X\n 012345\n@@ -25,13 +39,18 @@\n zX01\n+X\n 23\n+X\n 45\n+X\n 67\n+X\n 89\n+X\n 0\n', dmp.patch_toText(patches));
+    //function testPatchSplitMax() {
+    // Assumes that dmp.Match_MaxBits is 32.
+    describe('PatchSplitMax.', {
+      var patches:Array<PatchObj>;
+      
+      it('Case 1.', {
+        patches = dmp.patch_make('abcdefghijklmnopqrstuvwxyz01234567890', 'XabXcdXefXghXijXklXmnXopXqrXstXuvXwxXyzX01X23X45X67X89X0');
+        dmp.patch_splitMax(patches);
+        equals('@@ -1,32 +1,46 @@\n+X\n ab\n+X\n cd\n+X\n ef\n+X\n gh\n+X\n ij\n+X\n kl\n+X\n mn\n+X\n op\n+X\n qr\n+X\n st\n+X\n uv\n+X\n wx\n+X\n yz\n+X\n 012345\n@@ -25,13 +39,18 @@\n zX01\n+X\n 23\n+X\n 45\n+X\n 67\n+X\n 89\n+X\n 0\n', dmp.patch_toText(patches));
+      });
 
-      patches = dmp.patch_make('abcdef1234567890123456789012345678901234567890123456789012345678901234567890uvwxyz', 'abcdefuvwxyz');
-      var oldToText = dmp.patch_toText(patches);
-      dmp.patch_splitMax(patches);
-      assertEquals(oldToText, dmp.patch_toText(patches));
+      it('Case 2.', {
+        patches = dmp.patch_make('abcdef1234567890123456789012345678901234567890123456789012345678901234567890uvwxyz', 'abcdefuvwxyz');
+        var oldToText = dmp.patch_toText(patches);
+        dmp.patch_splitMax(patches);
+        equals(oldToText, dmp.patch_toText(patches));
+      });
 
-      patches = dmp.patch_make('1234567890123456789012345678901234567890123456789012345678901234567890', 'abc');
-      dmp.patch_splitMax(patches);
-      assertEquals('@@ -1,32 +1,4 @@\n-1234567890123456789012345678\n 9012\n@@ -29,32 +1,4 @@\n-9012345678901234567890123456\n 7890\n@@ -57,14 +1,3 @@\n-78901234567890\n+abc\n', dmp.patch_toText(patches));
+      it('Case 3.', {
+        patches = dmp.patch_make('1234567890123456789012345678901234567890123456789012345678901234567890', 'abc');
+        dmp.patch_splitMax(patches);
+        equals('@@ -1,32 +1,4 @@\n-1234567890123456789012345678\n 9012\n@@ -29,32 +1,4 @@\n-9012345678901234567890123456\n 7890\n@@ -57,14 +1,3 @@\n-78901234567890\n+abc\n', dmp.patch_toText(patches));
+      });
 
-      patches = dmp.patch_make('abcdefghij , h : 0 , t : 1 abcdefghij , h : 0 , t : 1 abcdefghij , h : 0 , t : 1', 'abcdefghij , h : 1 , t : 1 abcdefghij , h : 1 , t : 1 abcdefghij , h : 0 , t : 1');
-      dmp.patch_splitMax(patches);
-      assertEquals('@@ -2,32 +2,32 @@\n bcdefghij , h : \n-0\n+1\n  , t : 1 abcdef\n@@ -29,32 +29,32 @@\n bcdefghij , h : \n-0\n+1\n  , t : 1 abcdef\n', dmp.patch_toText(patches));
-    }
+      it('Case 4.', {
+        patches = dmp.patch_make('abcdefghij , h : 0 , t : 1 abcdefghij , h : 0 , t : 1 abcdefghij , h : 0 , t : 1', 'abcdefghij , h : 1 , t : 1 abcdefghij , h : 1 , t : 1 abcdefghij , h : 0 , t : 1');
+        dmp.patch_splitMax(patches);
+        equals('@@ -2,32 +2,32 @@\n bcdefghij , h : \n-0\n+1\n  , t : 1 abcdef\n@@ -29,32 +29,32 @@\n bcdefghij , h : \n-0\n+1\n  , t : 1 abcdef\n', dmp.patch_toText(patches));
+      });
+    });
 
-    function testPatchAddPadding() {
-      // Both edges full.
-      var patches = dmp.patch_make('', 'test');
-      assertEquals('@@ -0,0 +1,4 @@\n+test\n', dmp.patch_toText(patches));
-      dmp.patch_addPadding(patches);
-      assertEquals('@@ -1,8 +1,12 @@\n %01%02%03%04\n+test\n %01%02%03%04\n', dmp.patch_toText(patches));
+    //function testPatchAddPadding() {
+    describe('PatchAddPadding.', {
+      var patches:Array<PatchObj>;
+      
+      it('Both edges full.', {
+        patches = dmp.patch_make('', 'test');
+        equals('@@ -0,0 +1,4 @@\n+test\n', dmp.patch_toText(patches));
+        dmp.patch_addPadding(patches);
+        equals('@@ -1,8 +1,12 @@\n %01%02%03%04\n+test\n %01%02%03%04\n', dmp.patch_toText(patches));
+      });
 
-      // Both edges partial.
-      patches = dmp.patch_make('XY', 'XtestY');
-      assertEquals('@@ -1,2 +1,6 @@\n X\n+test\n Y\n', dmp.patch_toText(patches));
-      dmp.patch_addPadding(patches);
-      assertEquals('@@ -2,8 +2,12 @@\n %02%03%04X\n+test\n Y%01%02%03\n', dmp.patch_toText(patches));
+      it('Both edges partial.', {
+        patches = dmp.patch_make('XY', 'XtestY');
+        equals('@@ -1,2 +1,6 @@\n X\n+test\n Y\n', dmp.patch_toText(patches));
+        dmp.patch_addPadding(patches);
+        equals('@@ -2,8 +2,12 @@\n %02%03%04X\n+test\n Y%01%02%03\n', dmp.patch_toText(patches));
+      });
 
-      // Both edges none.
-      patches = dmp.patch_make('XXXXYYYY', 'XXXXtestYYYY');
-      assertEquals('@@ -1,8 +1,12 @@\n XXXX\n+test\n YYYY\n', dmp.patch_toText(patches));
-      dmp.patch_addPadding(patches);
-      assertEquals('@@ -5,8 +5,12 @@\n XXXX\n+test\n YYYY\n', dmp.patch_toText(patches));
-    }
+      it('Both edges none.', {
+        patches = dmp.patch_make('XXXXYYYY', 'XXXXtestYYYY');
+        equals('@@ -1,8 +1,12 @@\n XXXX\n+test\n YYYY\n', dmp.patch_toText(patches));
+        dmp.patch_addPadding(patches);
+        equals('@@ -5,8 +5,12 @@\n XXXX\n+test\n YYYY\n', dmp.patch_toText(patches));
+      });
+    });
 
-    function testPatchApply() {
+    //function testPatchApply() {
+    describe('PatchApply.', {
       dmp.Match_Distance = 1000;
       dmp.Match_Threshold = 0.5;
       dmp.Patch_DeleteThreshold = 0.5;
-      // Null case.
-      var patches = dmp.patch_make('', '');
-      var results = dmp.patch_apply(patches, 'Hello world.');
-      assertEquivalent(['Hello world.', []], results);
+      
+      var patches:Array<PatchObj>;
+      var results:MergePatch;
+      var patchstr:SString;
+      
+      it('Null case.', {
+        patches = dmp.patch_make('', '');
+        results = dmp.patch_apply(patches, 'Hello world.');
+        assertEquivalent((['Hello world.', []] : MergePatch), results);
+      });
 
-      // Exact match.
-      patches = dmp.patch_make('The quick brown fox jumps over the lazy dog.', 'That quick brown fox jumped over a lazy dog.');
-      results = dmp.patch_apply(patches, 'The quick brown fox jumps over the lazy dog.');
-      assertEquivalent(['That quick brown fox jumped over a lazy dog.', [true, true]], results);
+      it('Exact match.', {
+        patches = dmp.patch_make('The quick brown fox jumps over the lazy dog.', 'That quick brown fox jumped over a lazy dog.');
+        results = dmp.patch_apply(patches, 'The quick brown fox jumps over the lazy dog.');
+        assertEquivalent((['That quick brown fox jumped over a lazy dog.', [true, true]] : MergePatch), results);
+      });
 
-      // Partial match.
-      results = dmp.patch_apply(patches, 'The quick red rabbit jumps over the tired tiger.');
-      assertEquivalent(['That quick red rabbit jumped over a tired tiger.', [true, true]], results);
+      it('Partial match.', {
+        results = dmp.patch_apply(patches, 'The quick red rabbit jumps over the tired tiger.');
+        assertEquivalent((['That quick red rabbit jumped over a tired tiger.', [true, true]] : MergePatch), results);
+      });
 
-      // Failed match.
-      results = dmp.patch_apply(patches, 'I am the very model of a modern major general.');
-      assertEquivalent(['I am the very model of a modern major general.', [false, false]], results);
+      it('Failed match.', {
+        results = dmp.patch_apply(patches, 'I am the very model of a modern major general.');
+        assertEquivalent((['I am the very model of a modern major general.', [false, false]] : MergePatch), results);
+      });
 
-      // Big delete, small change.
-      patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
-      results = dmp.patch_apply(patches, 'x123456789012345678901234567890-----++++++++++-----123456789012345678901234567890y');
-      assertEquivalent(['xabcy', [true, true]], results);
+      it('Big delete, small change.', {
+        patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
+        results = dmp.patch_apply(patches, 'x123456789012345678901234567890-----++++++++++-----123456789012345678901234567890y');
+        assertEquivalent((['xabcy', [true, true]] : MergePatch), results);
+      });
 
-      // Big delete, big change 1.
-      patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
-      results = dmp.patch_apply(patches, 'x12345678901234567890---------------++++++++++---------------12345678901234567890y');
-      assertEquivalent(['xabc12345678901234567890---------------++++++++++---------------12345678901234567890y', [false, true]], results);
+      it('Big delete, big change 1.', {
+        patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
+        results = dmp.patch_apply(patches, 'x12345678901234567890---------------++++++++++---------------12345678901234567890y');
+        assertEquivalent((['xabc12345678901234567890---------------++++++++++---------------12345678901234567890y', [false, true]] : MergePatch), results);
+      });
 
-      // Big delete, big change 2.
-      dmp.Patch_DeleteThreshold = 0.6;
-      patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
-      results = dmp.patch_apply(patches, 'x12345678901234567890---------------++++++++++---------------12345678901234567890y');
-      assertEquivalent(['xabcy', [true, true]], results);
-      dmp.Patch_DeleteThreshold = 0.5;
+      it('Big delete, big change 2.', {
+        dmp.Patch_DeleteThreshold = 0.6;
+        patches = dmp.patch_make('x1234567890123456789012345678901234567890123456789012345678901234567890y', 'xabcy');
+        results = dmp.patch_apply(patches, 'x12345678901234567890---------------++++++++++---------------12345678901234567890y');
+        assertEquivalent((['xabcy', [true, true]] : MergePatch), results);
+        dmp.Patch_DeleteThreshold = 0.5;
+      });
 
-      // Compensate for failed patch.
-      dmp.Match_Threshold = 0.0;
-      dmp.Match_Distance = 0;
-      patches = dmp.patch_make('abcdefghijklmnopqrstuvwxyz--------------------1234567890', 'abcXXXXXXXXXXdefghijklmnopqrstuvwxyz--------------------1234567YYYYYYYYYY890');
-      results = dmp.patch_apply(patches, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ--------------------1234567890');
-      assertEquivalent(['ABCDEFGHIJKLMNOPQRSTUVWXYZ--------------------1234567YYYYYYYYYY890', [false, true]], results);
-      dmp.Match_Threshold = 0.5;
-      dmp.Match_Distance = 1000;
+      it('Compensate for failed patch.', {
+        dmp.Match_Threshold = 0.0;
+        dmp.Match_Distance = 0;
+        patches = dmp.patch_make('abcdefghijklmnopqrstuvwxyz--------------------1234567890', 'abcXXXXXXXXXXdefghijklmnopqrstuvwxyz--------------------1234567YYYYYYYYYY890');
+        results = dmp.patch_apply(patches, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ--------------------1234567890');
+        assertEquivalent((['ABCDEFGHIJKLMNOPQRSTUVWXYZ--------------------1234567YYYYYYYYYY890', [false, true]] : MergePatch), results);
+        dmp.Match_Threshold = 0.5;
+        dmp.Match_Distance = 1000;
+      });
 
-      // No side effects.
-      patches = dmp.patch_make('', 'test');
-      var patchstr = dmp.patch_toText(patches);
-      dmp.patch_apply(patches, '');
-      assertEquals(patchstr, dmp.patch_toText(patches));
+      it('No side effects.', {
+        patches = dmp.patch_make('', 'test');
+        patchstr = dmp.patch_toText(patches);
+        dmp.patch_apply(patches, '');
+        equals(patchstr, dmp.patch_toText(patches));
+      });
 
-      // No side effects with major delete.
-      patches = dmp.patch_make('The quick brown fox jumps over the lazy dog.', 'Woof');
-      patchstr = dmp.patch_toText(patches);
-      dmp.patch_apply(patches, 'The quick brown fox jumps over the lazy dog.');
-      assertEquals(patchstr, dmp.patch_toText(patches));
+      it('No side effects with major delete.', {
+        patches = dmp.patch_make('The quick brown fox jumps over the lazy dog.', 'Woof');
+        patchstr = dmp.patch_toText(patches);
+        dmp.patch_apply(patches, 'The quick brown fox jumps over the lazy dog.');
+        equals(patchstr, dmp.patch_toText(patches));
+      });
 
-      // Edge exact match.
-      patches = dmp.patch_make('', 'test');
-      results = dmp.patch_apply(patches, '');
-      assertEquivalent(['test', [true]], results);
+      it('Edge exact match.', {
+        patches = dmp.patch_make('', 'test');
+        results = dmp.patch_apply(patches, '');
+        assertEquivalent((['test', [true]] : MergePatch), results);
+      });
 
-      // Near edge exact match.
-      patches = dmp.patch_make('XY', 'XtestY');
-      results = dmp.patch_apply(patches, 'XY');
-      assertEquivalent(['XtestY', [true]], results);
+      it('Near edge exact match.', {
+        patches = dmp.patch_make('XY', 'XtestY');
+        results = dmp.patch_apply(patches, 'XY');
+        assertEquivalent((['XtestY', [true]] : MergePatch), results);
+      });
 
-      // Edge partial match.
-      patches = dmp.patch_make('y', 'y123');
-      results = dmp.patch_apply(patches, 'x');
-      assertEquivalent(['x123', [true]], results);
-    }*/
+      it('Edge partial match.', {
+        patches = dmp.patch_make('y', 'y123');
+        results = dmp.patch_apply(patches, 'x');
+        assertEquivalent((['x123', [true]] : MergePatch), results);
+      });
+    });
   }
 }
 

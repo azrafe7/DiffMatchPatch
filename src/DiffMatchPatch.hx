@@ -39,19 +39,29 @@
  *  - watch for regexes (search for 'match')
  *  - check Date
  *  - encode/decodeURI -> urlEncode/Decode (does haxe urlDecode throw on failing?)
- *    - haxe uses encodeURICompontent for urlEncode, what we need is a portable encodeURI compatible with js instead!
+ *    - haxe uses encodeURICompontent for urlEncode, what we need is a portable encodeURI compatible 
+ *      with js instead (see Internal.encodeURI)!
  *  - watch for fallthroughs in switch cases
  * 
- *  - for now it's IMPORTANT to cast dynArrays down to the wanted/expected types, or manually type them ahead of usage.
- *    Examples (GOOD): 
+ *  - for now in tests it's IMPORTANT to cast dynArrays down to the wanted/expected types, or manually type them ahead of usage.
+ *    Examples: Use these (GOOD): 
  *      var diffs:Diff = [[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']]
  *      ([[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']] : Diff)
  *      (['xabcy', [true, true]] : MergePatch)
  *      etc.
  * 
- *    And NOT use (BAD):
+ *    And avoid these (BAD):
  *      [[DIFF_DELETE, 'ab'], [DIFF_INSERT, 'cd'], [DIFF_EQUAL, '12'], [DIFF_DELETE, 'e']]
  *      ['xabcy', [true, true]]
+ * 
+ * 
+ *  - Some TODOs:
+ *    [ ] - clean up resolved issues/notes/trace/jsDebugger
+ *    [ ] - inline proxied methods (or better put them behind an #ifdef)
+ *    [ ] - get rid of the reamining Dynamic and Std.is checks wherever possible
+ *    [ ] - add v8.encodeURI tests' license to global license/copying (it's a permissive one)
+ *    [ ] - cache text.length/use-iter()-with-unifill where appropriate
+ *    [ ] - add real world examples and a js/html demo
  */
 
 import unifill.CodePoint;

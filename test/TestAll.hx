@@ -31,7 +31,8 @@ using unifill.Unifill;
 //NOTE(hx): using Assert.same as a subst for assertEquivalent
 
 @reporter("MochaReporter")
-class TestAll implements Buddy <[
+class TestAll implements Buddy < [
+    TestEncodeURI,
     TestDiff, 
     TestMatch, 
     TestPatch, 
@@ -51,6 +52,7 @@ class TestAll implements Buddy <[
     var reporter = new MochaReporter();
   
     var runner = new SuitesRunner([
+      new TestEncodeURI(),
       new TestDiff(), 
       new TestMatch(), 
       new TestPatch(), 

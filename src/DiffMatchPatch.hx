@@ -48,6 +48,7 @@ import unifill.CodePoint;
 
 using unifill.Unifill;
 using DiffMatchPatch.Internal; 
+using StringTools;
 
 
 class DiffMatchPatch {
@@ -1376,7 +1377,7 @@ class DiffMatchPatch {
     for (x in 0...diffs.length) {
       switch (diffs[x][0]) {
         case DIFF_INSERT:
-          text[x] = '+' + Internal.encodeURI(diffs[x][1]); //NOTE(hx): encodeURI -> urlEncode
+          text[x] = '+' + Internal.encodeURI((diffs[x][1])); //NOTE(hx): encodeURI -> urlEncode
           //break;
         case DIFF_DELETE:
           text[x] = '-' + diffs[x][1].length;
@@ -2475,19 +2476,44 @@ class Internal {
   
   @:noUsing
   static public function encodeURI(s:SString):SString {
-  #if (js)
+  #if (0)
     return untyped __js__('encodeURI({0})', s);
   #else
-    return StringTools.urlEncode(s);
+    return encodeURICompat(StringTools.urlEncode(s));
   #end
+  }
+  
+  // see java/cs version of google-diff-match-patch
+  /**
+   * Unescape selected chars for compatability with JavaScript's encodeURI.
+   * In speed critical applications this could be dropped since the
+   * receiving application will certainly decode these fine.
+   * Note that this function is case-sensitive.  Thus "%3f" would not be
+   * unescaped.  But this is ok because it is only called with the output of
+   * URLEncoder.encode which returns uppercase hex.
+   *
+   * Example: "%3F" -> "?", "%24" -> "$", etc.
+   *
+   * @param str The string to escape.
+   * @return The escaped string.
+   */
+  static function encodeURICompat(s:SString) {
+    return s.replace("%21", "!").replace("%7E", "~")
+            .replace("%27", "'").replace("%28", "(").replace("%29", ")")
+            .replace("%3B", ";").replace("%2F", "/").replace("%3F", "?")
+            .replace("%3A", ":").replace("%40", "@").replace("%26", "&")
+            .replace("%3D", "=").replace("%2B", "+").replace("%24", "$")
+            .replace("%2C", ",").replace("%23", "#")
+            
+            .replace("%2A", "*");
   }
   
   @:noUsing
   static public function decodeURI(s:SString):SString {
-  #if (js)
+  #if (0)
     return untyped __js__('decodeURI({0})', s);
   #else
-    return StringTools.urlDecode(s);
+    return s.replace("+", "%2B").urlDecode();
   #end
   }
 }

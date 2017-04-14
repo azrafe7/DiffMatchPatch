@@ -279,8 +279,8 @@ class DiffMatchPatch {
     var pointer = 0;
     var count_delete = 0;
     var count_insert = 0;
-    var text_delete = '';
-    var text_insert = '';
+    var text_delete:SString = '';
+    var text_insert:SString = '';
     while (pointer < diffs.length) {
       switch (diffs[pointer][0]) {
         case DIFF_INSERT:
@@ -1400,7 +1400,7 @@ class DiffMatchPatch {
           text[x] = '+' + Internal.encodeURI((diffs[x][1])); //NOTE(hx): encodeURI -> urlEncode
           //break;
         case DIFF_DELETE:
-          text[x] = '-' + diffs[x][1].length;
+          text[x] = '-' + diffs[x].text.length;
           //break;
         case DIFF_EQUAL:
           text[x] = '=' + diffs[x][1].length;
@@ -2319,6 +2319,7 @@ abstract Diff(Array<SingleDiff>) from Array<SingleDiff> to Array<SingleDiff> {
 }
 
 @:native("SingleDiff")
+@:forward
 abstract SingleDiff(SingleDiffData) from SingleDiffData {
   public function new(op:DiffOp, text:SString) {
     this = new SingleDiffData(op, text);
@@ -2557,6 +2558,7 @@ abstract NullIntArray(Array<Null<Int>>) from Array<Null<Int>> {
 
 
 @:native("MergePatch")
+@:forward
 abstract MergePatch(MergePatchData) from MergePatchData {
   
   inline public function new(newText:SString, boolValues:Array<Bool>):Void {

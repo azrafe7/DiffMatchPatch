@@ -652,7 +652,9 @@ class TestDiff extends BuddySuite {
       });
 
       it('Invalid escape sequence (\\0).', {
-        //assertEquivalent([[DIFF_DELETE, 'a'], [DIFF_INSERT, '\u0680'], [DIFF_EQUAL, 'x'], [DIFF_DELETE, '\t'], [DIFF_INSERT, '\0']], dmp.diff_main('ax\t', '\u0680x\0', false));
+        // PENDING (errors at compile time with "Invalid escape sequence \0")
+        
+        //assertEquivalent(([[DIFF_DELETE, 'a'], [DIFF_INSERT, '\u0680'], [DIFF_EQUAL, 'x'], [DIFF_DELETE, '\t'], [DIFF_INSERT, '\0']] : Diff), dmp.diff_main('ax\t', '\u0680x\0', false));
       });
 
       it('Overlaps.', {
@@ -667,10 +669,9 @@ class TestDiff extends BuddySuite {
         assertEquivalent(([[DIFF_INSERT, ' '], [DIFF_EQUAL, 'a'], [DIFF_INSERT, 'nd'], [DIFF_EQUAL, ' [[Pennsylvania]]'], [DIFF_DELETE, ' and [[New']] : Diff), dmp.diff_main('a [[Pennsylvania]] and [[New', ' and [[Pennsylvania]]', false));
       });
 
-      it('Timeout.', {
-        // PENDING
+      xit('Timeout.', {
+        // PENDING (should pass, but takes too much time > 30s)
         
-        /*
         dmp.Diff_Timeout = 0.1;  // 100ms
         a = '`Twas brillig, and the slithy toves\nDid gyre and gimble in the wabe:\nAll mimsy were the borogoves,\nAnd the mome raths outgrabe.\n';
         b = 'I am the very model of a modern major general,\nI\'ve information vegetable, animal, and mineral,\nI know the kings of England, and I quote the fights historical,\nFrom Marathon to Waterloo, in order categorical.\n';
@@ -692,8 +693,6 @@ class TestDiff extends BuddySuite {
         // internal test system.  Whereas browsers take 140 ms.
         //assertTrue(dmp.Diff_Timeout * 1000 * 2 > endTime - startTime);
         // ****
-        
-        */
       });
     });
     

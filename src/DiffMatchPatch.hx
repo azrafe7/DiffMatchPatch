@@ -66,6 +66,7 @@
  */
 
 import unifill.CodePoint;
+import unifill.CodePointIter;
 import unifill.InternalEncoding;
 
 using unifill.Unifill;
@@ -207,12 +208,13 @@ class DiffMatchPatch {
 
     var longtext = text1.length > text2.length ? text1 : text2;
     var shorttext = text1.length > text2.length ? text2 : text1;
+    var shorttextLength = shorttext.length;
     var i = longtext.indexOf(shorttext);
     if (i != -1) {
       // Shorter text is inside the longer text (speedup).
       diffs = [new SingleDiff(DIFF_INSERT, longtext.substring(0, i)),
                new SingleDiff(DIFF_EQUAL, shorttext),
-               new SingleDiff(DIFF_INSERT, longtext.substring(i + shorttext.length))];
+               new SingleDiff(DIFF_INSERT, longtext.substring(i + shorttextLength))];
       // Swap insertions for deletions if diff is reversed.
       if (text1.length > text2.length) {
         diffs[0][0] = diffs[2][0] = DIFF_DELETE;
@@ -220,7 +222,7 @@ class DiffMatchPatch {
       return diffs;
     }
 
-    if (shorttext.length == 1) {
+    if (shorttextLength == 1) {
       // Single character string.
       // After the previous speedup, the character can't be an equality.
       return [new SingleDiff(DIFF_DELETE, text1), new SingleDiff(DIFF_INSERT, text2)];
@@ -514,7 +516,7 @@ class DiffMatchPatch {
      * @return {string} Encoded string.
      * @private
      */
-    function diff_linesToCharsMunge_(text:SString) {
+    function diff_linesToCharsMunge_(text:SString):SString {
       var chars:SString = '';
       // Walk the text, pulling out a substring for each line.
       // text.split('\n') would would temporarily double our memory footprint.
@@ -523,15 +525,16 @@ class DiffMatchPatch {
       var lineEnd = -1;
       // Keeping our own length variable is faster than looking it up.
       var lineArrayLength = lineArray.length;
-      while (lineEnd < text.length - 1) {
+      var textLength = text.length;
+      while (lineEnd < textLength - 1) {
         lineEnd = text.indexOf('\n', lineStart);
         if (lineEnd == -1) {
-          lineEnd = text.length - 1;
+          lineEnd = textLength - 1;
         }
         var line = text.substring(lineStart, lineEnd + 1);
         lineStart = lineEnd + 1;
 
-        //NOTE(hx): hasOwnProperty (I predict this will break things somewhere)
+        //NOTE(hx): hasOwnProperty
         if (lineHash[line] != null) { //NOTE(hx): undefined
           chars += SString.fromCharCode(lineHash[line]);
         } else {
@@ -561,8 +564,13 @@ class DiffMatchPatch {
     for (x in 0...diffs.length) {
       var chars:SString = diffs[x][1];
       var text = [];
-      for (y in 0...chars.length) {
-        text[y] = lineArray[chars.charCodeAt(y)];
+      //NOTE(hx): refactored to use codePointIterator
+      //for (y in 0...chars.length) {
+      var y = 0;
+      for (cp in chars) {
+        //text[y] = lineArray[chars.charCodeAt(y)];
+        text[y] = lineArray[cp.toInt()];
+        y++;
       }
       diffs[x][1] = text.join('');
     }
@@ -609,20 +617,23 @@ class DiffMatchPatch {
    */
   public function diff_commonSuffix(text1:SString, text2:SString):Int {
     // Quick check for common null cases.
+    //NOTE(hx): cache lengths
+    var text1Length = text1.length;
+    var text2Length = text2.length;
     //NOTE(hx): check falsey
     if (text1 == null || text2 == null ||
-        text1.charAt(text1.length - 1) != text2.charAt(text2.length - 1)) {
+        text1.charAt(text1Length - 1) != text2.charAt(text2Length - 1)) {
       return 0;
     }
     // Binary search.
     // Performance analysis: http://neil.fraser.name/news/2007/10/09/
     var pointermin:Int = 0;
-    var pointermax = Std.int(Math.min(text1.length, text2.length));
+    var pointermax = Std.int(Math.min(text1Length, text2Length));
     var pointermid = pointermax;
     var pointerend = 0;
     while (pointermin < pointermid) {
-      if (text1.substring(text1.length - pointermid, text1.length - pointerend) ==
-          text2.substring(text2.length - pointermid, text2.length - pointerend)) {
+      if (text1.substring(text1Length - pointermid, text1Length - pointerend) ==
+          text2.substring(text2Length - pointermid, text2Length - pointerend)) {
         pointermin = pointermid;
         pointerend = pointermin;
       } else {
@@ -1643,11 +1654,21 @@ class DiffMatchPatch {
    */
   public function match_alphabet_(pattern:SString) {
     var s = new Map<SString, Int>(); //NOTE(hx): mmmhh... 
-    for (i in 0...pattern.length) {
+    //NOTE(hx): refactored to use codePointIterator
+    /*for (i in 0...pattern.length) {
       s[pattern.charAt(i)] = 0;
     }
     for (i in 0...pattern.length) {
       s[pattern.charAt(i)] |= 1 << (pattern.length - i - 1);
+    }*/
+    var patternLength = pattern.length;
+    for (cp in pattern) {
+      s[cp.toString()] = 0;
+    }
+    var i = 0;
+    for (cp in pattern) {
+      s[cp.toString()] |= 1 << (patternLength - i - 1);
+      i++;
     }
     return s;
   };
@@ -2458,6 +2479,10 @@ abstract SString(String) from String to String {
   public function charCodeAt(i:Int):Int {
     return Unifill.uCharCodeAt(this, i);
   }
+  
+  public function iterator() : CodePointIter {
+    return Unifill.uIterator(this);
+  }
 }
 
 
@@ -2536,6 +2561,10 @@ class Internal {
   #else
     return s.replace("+", "%2B").urlDecode();
   #end
+  }
+  
+  static public function addCodePoint(buf:StringBuf, cp:CodePoint):Void {
+    Unifill.uAddChar(buf, cp);
   }
 }
 

@@ -1400,10 +1400,10 @@ class DiffMatchPatch {
           text[x] = '+' + Internal.encodeURI((diffs[x][1])); //NOTE(hx): encodeURI -> urlEncode
           //break;
         case DIFF_DELETE:
-          text[x] = '-' + diffs[x].text.length;
+          text[x] = '-' + (diffs[x][1] : SString).length;
           //break;
         case DIFF_EQUAL:
-          text[x] = '=' + diffs[x][1].length;
+          text[x] = '=' + (diffs[x][1] : SString).length;
           //break;
       }
     }
@@ -1419,7 +1419,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @throws {!Error} If invalid input.
    */
-  public function diff_fromDelta(text1, delta):Diff {
+  public function diff_fromDelta(text1:SString, delta:SString):Diff {
     var diffs:Diff = [];
     var diffsLength = 0;  // Keeping our own length var is faster in JS.
     var pointer = 0;  // Cursor in text1
@@ -2100,7 +2100,7 @@ class DiffMatchPatch {
               bigpatch.diffs.shift();
             } else {
               bigpatch.diffs[0][1] =
-                  bigpatch.diffs[0][1].substring(diff_text.length);
+                  (bigpatch.diffs[0][1] : SString).substring(diff_text.length);
             }
           }
         }

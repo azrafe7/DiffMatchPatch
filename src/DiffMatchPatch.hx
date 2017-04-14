@@ -41,6 +41,7 @@
  *  - encode/decodeURI -> urlEncode/Decode (does haxe urlDecode throw on failing?)
  *    - haxe uses encodeURICompontent for urlEncode, what we need is a portable encodeURI compatible 
  *      with js instead (see Internal.encodeURI)!
+ *    - we're also relying on unifill.InternalEncoding.validate() to check for unicode validity
  *  - watch for fallthroughs in switch cases
  * 
  *  - for now in tests it's IMPORTANT to cast dynArrays down to the wanted/expected types, or manually type them ahead of usage.
@@ -65,6 +66,7 @@
  */
 
 import unifill.CodePoint;
+import unifill.InternalEncoding;
 
 using unifill.Unifill;
 using DiffMatchPatch.Internal; 
@@ -1431,7 +1433,9 @@ class DiffMatchPatch {
       switch (tokens[x].charAt(0)) {
         case '+':
           try {
-            diffs[diffsLength++] = new SingleDiff(DIFF_INSERT, Internal.decodeURI(param)); //NOTE(hx): decodeURI -> urlDecode
+            var decoded = Internal.decodeURI(param);
+            InternalEncoding.validate(decoded); //NOTE(hx): this will throw an exception if it's not a valid unicode string
+            diffs[diffsLength++] = new SingleDiff(DIFF_INSERT, decoded); //NOTE(hx): decodeURI -> urlDecode
           } catch (ex:Dynamic) {
             // Malformed URI sequence.
             throw new Error('Illegal escape in diff_fromDelta: ' + param);
@@ -2194,6 +2198,7 @@ class DiffMatchPatch {
         var line = "";
         try {
           line = Internal.decodeURI(text[textPointer].substring(1)); //NOTE(hx): decodeURI -> urlDecode (throw? - move line outside)
+          InternalEncoding.validate(line); //NOTE(hx): this will throw an exception if it's not a valid unicode string
         } catch (ex:Dynamic) {
           // Malformed URI sequence.
           throw new Error('Illegal escape in patch_fromText: ' + /*line*/text[textPointer].substring(1));
@@ -2513,7 +2518,7 @@ class Internal {
    * @param str The string to escape.
    * @return The escaped string.
    */
-  static function encodeURICompat(s:SString) {
+  static function encodeURICompat(s:SString):SString {
     return s.replace("%21", "!").replace("%7E", "~")
             .replace("%27", "'").replace("%28", "(").replace("%29", ")")
             .replace("%3B", ";").replace("%2F", "/").replace("%3F", "?")

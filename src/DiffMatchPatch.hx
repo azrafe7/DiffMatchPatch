@@ -1382,7 +1382,7 @@ class DiffMatchPatch {
     var deletions = 0;
     for (x in 0...diffs.length) {
       var op = diffs[x][0];
-      var data = diffs[x][1];
+      var data:SString = diffs[x][1];
       switch (op) {
         case DIFF_INSERT:
           insertions += data.length;
@@ -1924,7 +1924,7 @@ class DiffMatchPatch {
     var results:Array<Bool> = [];
     for (x in 0...patches.length) {
       var expected_loc = patches[x].start2 + delta;
-      var text1 = this.diff_text1(patches[x].diffs);
+      var text1:SString = this.diff_text1(patches[x].diffs);
       var start_loc;
       var end_loc = -1;
       if (text1.length > this.Match_MaxBits) {
@@ -1953,7 +1953,7 @@ class DiffMatchPatch {
         // Found a match.  :)
         results[x] = true;
         delta = start_loc - expected_loc;
-        var text2;
+        var text2:SString;
         if (end_loc == -1) {
           text2 = text.substring(start_loc, start_loc + text1.length);
         } else {
@@ -2012,7 +2012,7 @@ class DiffMatchPatch {
    */
   public function patch_addPadding(patches:Array<PatchObj>):SString {
     var paddingLength = this.Patch_Margin;
-    var nullPadding = '';
+    var nullPadding:SString = '';
     //NOTE(hx): <= in loop
     for (x in 1...paddingLength + 1) {
       nullPadding += SString.fromCharCode(x);

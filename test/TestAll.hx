@@ -178,6 +178,7 @@ class TestDiff extends BuddySuite {
     //function testDiffLinesToChars() {
     describe('Convert lines down to characters.', {
       it('Default case.', {
+        jsDebugger('default lines2chars');
         assertLinesToCharsResultEquals( { chars1: '\x01\x02\x01', chars2: '\x02\x01\x02', lineArray: ['', 'alpha\n', 'beta\n'] }, dmp.diff_linesToChars_('alpha\nbeta\nalpha\n', 'beta\nalpha\nbeta\n'));
 
         assertLinesToCharsResultEquals( { chars1: '', chars2: '\x01\x02\x03\x03', lineArray: ['', 'alpha\r\n', 'beta\r\n', '\r\n'] }, dmp.diff_linesToChars_('', 'alpha\r\nbeta\r\n\r\n\r\n'));
@@ -669,8 +670,9 @@ class TestDiff extends BuddySuite {
         assertEquivalent(([[DIFF_INSERT, ' '], [DIFF_EQUAL, 'a'], [DIFF_INSERT, 'nd'], [DIFF_EQUAL, ' [[Pennsylvania]]'], [DIFF_DELETE, ' and [[New']] : Diff), dmp.diff_main('a [[Pennsylvania]] and [[New', ' and [[Pennsylvania]]', false));
       });
 
-      xit('Timeout.', {
-        // PENDING (should pass, but takes too much time > 30s)
+      timeoutMs = 10000;
+      it('Timeout.', {
+        // PENDING (should pass, but might take some time)
         
         dmp.Diff_Timeout = 0.1;  // 100ms
         a = '`Twas brillig, and the slithy toves\nDid gyre and gimble in the wabe:\nAll mimsy were the borogoves,\nAnd the mome raths outgrabe.\n';
@@ -680,6 +682,7 @@ class TestDiff extends BuddySuite {
           a = a + a;
           b = b + b;
         }
+        jsDebugger('timeout');
         var startTime = (Date.now()).getTime();
         dmp.diff_main(a, b);
         var endTime = (Date.now()).getTime();
@@ -700,10 +703,11 @@ class TestDiff extends BuddySuite {
       var a:String = null;
       var b:String = null;
       
-      dmp.Diff_Timeout = 0;
-
+      timeoutMs = 5000; // reset default timeout for buddy
+      
       // Must be long to pass the 100 char cutoff.
       it('Simple line-mode.', {
+        dmp.Diff_Timeout = 0;
         a = '1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n1234567890\n';
         b = 'abcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\nabcdefghij\n';
         assertEquivalent(dmp.diff_main(a, b, false), dmp.diff_main(a, b, true));

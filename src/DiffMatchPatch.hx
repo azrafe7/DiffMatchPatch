@@ -517,33 +517,39 @@ class DiffMatchPatch {
      * @private
      */
     function diff_linesToCharsMunge_(text:SString):SString {
+      //NOTE(hx): use StringBuf instead of appending to chars
+      var buf = new StringBuf();
       var chars:SString = '';
+      //NOTE(hx): refactored this, as Unifill.uSubstring is slow (because it has to recalc the offsets from start each time).
+      //          So we accumulate a string until we hit a \n, use it, then reset it and restart the process.
+      
       // Walk the text, pulling out a substring for each line.
       // text.split('\n') would would temporarily double our memory footprint.
       // Modifying text would create many large strings to garbage collect.
-      var lineStart = 0;
-      var lineEnd = -1;
+
       // Keeping our own length variable is faster than looking it up.
       var lineArrayLength = lineArray.length;
       var textLength = text.length;
-      while (lineEnd < textLength - 1) {
-        lineEnd = text.indexOf('\n', lineStart);
-        if (lineEnd == -1) {
-          lineEnd = textLength - 1;
+      var line:SString = '';
+      var i = 0;
+      for (cp in text) {
+        line += cp.toString();
+        if (cp.toString() == '\n' || i == textLength - 1) {
+          //NOTE(hx): hasOwnProperty
+          if (lineHash[line] != null) { //NOTE(hx): undefined
+            //chars += SString.fromCharCode(lineHash[line]);
+            Internal.addCodePoint(buf, (lineHash[line]));
+          } else {
+            //chars += SString.fromCharCode(lineArrayLength);
+            Internal.addCodePoint(buf, (lineArrayLength));
+            lineHash[line] = lineArrayLength;
+            lineArray[lineArrayLength++] = line;
+          }
+          line = '';
         }
-        var line = text.substring(lineStart, lineEnd + 1);
-        lineStart = lineEnd + 1;
-
-        //NOTE(hx): hasOwnProperty
-        if (lineHash[line] != null) { //NOTE(hx): undefined
-          chars += SString.fromCharCode(lineHash[line]);
-        } else {
-          chars += SString.fromCharCode(lineArrayLength);
-          lineHash[line] = lineArrayLength;
-          lineArray[lineArrayLength++] = line;
-        }
+        i++;
       }
-      return chars;
+      return buf.toString();
     }
 
     var chars1:SString = diff_linesToCharsMunge_(text1);

@@ -1628,7 +1628,7 @@ class DiffMatchPatch {
       var start = Std.int(Math.max(1, loc - bin_mid + 1));
       var finish = Std.int(Math.min(loc + bin_mid, textLength)) + pattern.length;
 
-      var rd:NullIntArray = [for (i in 0...finish + 2) null]; //NOTE(hx): init array by length
+      var rd:NullIntArray = [for (i in 0...finish + 2) 0]; //NOTE(hx): init array by length
       rd[finish + 1] = (1 << d) - 1;
       var j = finish;
       //for (var j = finish; j >= start; j--) {
@@ -1647,7 +1647,6 @@ class DiffMatchPatch {
         }
         //NOTE(hx): check conditional
         var rdj = rd[j];
-        if (rdj == null) rdj = 0;
         if ((rdj & matchmask) != 0) { 
           var score = match_bitapScore_(d, j - 1);
           // This match will almost certainly be better than any existing match.
@@ -2601,8 +2600,8 @@ class Internal {
 }
 
 
-
-@:forward
+typedef NullIntArray = Array<Int>;
+/*@:forward
 abstract NullIntArray(Array<Null<Int>>) from Array<Null<Int>> {
   
   @:arrayAccess function get(idx:Int) {
@@ -2619,7 +2618,7 @@ abstract NullIntArray(Array<Null<Int>>) from Array<Null<Int>> {
   #end
     return this[idx] = value;
   }
-}
+}*/
 
 
 

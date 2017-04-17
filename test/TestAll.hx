@@ -64,6 +64,11 @@ class TestAll implements Buddy < [
   #else
     trace("DEBUG: false");
   #end
+  
+  #if sys
+    trace("PRESS PLAY ON TAPE...");
+    Sys.stdin().readLine();
+  #end
   }
 }
 
@@ -192,11 +197,11 @@ class TestDiff extends BuddySuite {
         var charList = [];
         for (x in 1...n + 1) {
           lineList[x - 1] = x + '\n';
-          charList[x - 1] = SString.fromCharCode(x);
+          charList[x - 1] = UString.fromCharCode(x);
         }
         equals(n, lineList.length);
-        var lines:SString = lineList.join('');
-        var chars:SString = charList.join('');
+        var lines:UString = lineList.join('');
+        var chars:UString = charList.join('');
         equals(n, chars.length);
         lineList.unshift('');
         assertLinesToCharsResultEquals( { chars1: chars, chars2: '', lineArray: lineList }, dmp.diff_linesToChars_(lines, ''));
@@ -217,11 +222,11 @@ class TestDiff extends BuddySuite {
         var charList = [];
         for (x in 1...n + 1) {
           lineList[x - 1] = x + '\n';
-          charList[x - 1] = SString.fromCharCode(x);
+          charList[x - 1] = UString.fromCharCode(x);
         }
         equals(n, lineList.length);
-        var lines:SString = lineList.join('');
-        var chars:SString = charList.join('');
+        var lines:UString = lineList.join('');
+        var chars:UString = charList.join('');
         equals(n, chars.length);
         lineList.unshift('');
         var diffs = [new SingleDiff(DIFF_DELETE, chars)];
@@ -671,7 +676,7 @@ class TestDiff extends BuddySuite {
       });
 
       timeoutMs = 10000;
-      it('Timeout.', {
+      xit('Timeout.', {
         // PENDING (should pass, but might take some time)
         
         dmp.Diff_Timeout = 0.1;  // 100ms
@@ -946,9 +951,9 @@ class TestPatch extends BuddySuite {
 
     //function testPatchMake() {
     describe('PatchMake.', {
-      var text1:SString = 'The quick brown fox jumps over the lazy dog.';
-      var text2:SString = 'That quick brown fox jumped over a lazy dog.';
-      var expectedPatch:SString = null;
+      var text1:UString = 'The quick brown fox jumps over the lazy dog.';
+      var text2:UString = 'That quick brown fox jumped over a lazy dog.';
+      var expectedPatch:UString = null;
       var diffs:Diff;
       
       it('Null case.', {
@@ -1083,7 +1088,7 @@ class TestPatch extends BuddySuite {
       
       var patches:Array<PatchObj>;
       var results:MergePatch;
-      var patchstr:SString;
+      var patchstr:UString;
       
       it('Null case.', {
         patches = dmp.patch_make('', '');

@@ -26,7 +26,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import DiffMatchPatch.Internal.*;
-import DiffMatchPatch.SString;
+import DiffMatchPatch.UString;
 import unifill.Unicode;
  
 import buddy.BuddySuite;
@@ -77,31 +77,31 @@ class TestEncodeURI extends BuddySuite {
         
       it('Create strings from codepoints.', {
         cc1  = 0x007D;
-        s1   = SString.fromCharCode(cc1);
+        s1   = UString.fromCharCode(cc1);
         cc2  = 0x0000;
-        s2   = SString.fromCharCode(cc2);
+        s2   = UString.fromCharCode(cc2);
         cc3  = 0x0080;
-        s3   = SString.fromCharCode(cc3);
+        s3   = UString.fromCharCode(cc3);
         cc4  = 0x0555;
-        s4   = SString.fromCharCode(cc4);
+        s4   = UString.fromCharCode(cc4);
         cc5  = 0x07FF;
-        s5   = SString.fromCharCode(cc5);
+        s5   = UString.fromCharCode(cc5);
         cc6  = 0x0800;
-        s6   = SString.fromCharCode(cc6);
+        s6   = UString.fromCharCode(cc6);
         cc7  = 0xAEEE;
-        s7   = SString.fromCharCode(cc7);
+        s7   = UString.fromCharCode(cc7);
         cc8_1= 0xD800;
         cc8_2= 0xDC00;
         cc8  = Unicode.decodeSurrogate(cc8_1, cc8_2);
         //s8   = SString.fromCharCode(cc8_1) + SString.fromCharCode(cc8_2);
-        s8   = SString.fromCharCode(cc8);
+        s8   = UString.fromCharCode(cc8);
         cc9_1= 0xDBFF;
         cc9_2= 0xDFFF;
         cc9  = Unicode.decodeSurrogate(cc9_1, cc9_2);
         //s9   = SString.fromCharCode(cc9_1) + SString.fromCharCode(cc9_2);
-        s9   = SString.fromCharCode(cc9);
+        s9   = UString.fromCharCode(cc9);
         cc10 = 0xE000;
-        s10  = SString.fromCharCode(cc10);
+        s10  = UString.fromCharCode(cc10);
       });
       
       it('EncodeURI.', {
@@ -141,7 +141,7 @@ class TestEncodeURI extends BuddySuite {
       
       it('Input == Output.', {
         
-        inline function test(string:SString) {
+        inline function test(string:UString) {
           equals(string, decodeURI(encodeURI(string)));
         }
         

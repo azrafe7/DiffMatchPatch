@@ -122,7 +122,7 @@ class DiffMatchPatch {
    *     instead.
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    */
-  public function diff_main(text1:SString, text2:SString, ?opt_checklines:Bool, ?opt_deadline:Float):Diff {
+  public function diff_main(text1:UString, text2:UString, ?opt_checklines:Bool, ?opt_deadline:Float):Diff {
     // Set a deadline by which time the diff must be complete.
     if (opt_deadline == null) {
       if (this.Diff_Timeout <= 0) {
@@ -192,7 +192,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @private
    */
-  function diff_compute_(text1:SString, text2:SString, checklines:Bool, deadline:Float):Diff {
+  function diff_compute_(text1:UString, text2:UString, checklines:Bool, deadline:Float):Diff {
     var diffs:Diff;
 
     //NOTE(hx): more falsey values
@@ -263,7 +263,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @private
    */
-  function diff_lineMode_(text1:SString, text2:SString, deadline) {
+  function diff_lineMode_(text1:UString, text2:UString, deadline) {
     // Scan the text on a line-by-line basis first.
     var a = this.diff_linesToChars_(text1, text2);
     text1 = a.chars1;
@@ -283,8 +283,8 @@ class DiffMatchPatch {
     var pointer = 0;
     var count_delete = 0;
     var count_insert = 0;
-    var text_delete:SString = '';
-    var text_insert:SString = '';
+    var text_delete:UString = '';
+    var text_insert:UString = '';
     while (pointer < diffs.length) {
       switch (diffs[pointer][0]) {
         case DIFF_INSERT:
@@ -335,7 +335,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @private
    */
-  public function diff_bisect_(text1:SString, text2:SString, deadline:Float):Diff {
+  public function diff_bisect_(text1:UString, text2:UString, deadline:Float):Diff {
     // Cache the text lengths to prevent multiple calls.
     var text1_length = text1.length;
     var text2_length = text2.length;
@@ -476,7 +476,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @private
    */
-  function diff_bisectSplit_(text1:SString, text2:SString, x:Int, y:Int, deadline) {
+  function diff_bisectSplit_(text1:UString, text2:UString, x:Int, y:Int, deadline) {
     var text1a = text1.substring(0, x);
     var text2a = text2.substring(0, y);
     var text1b = text1.substring(x);
@@ -501,10 +501,10 @@ class DiffMatchPatch {
    *     The zeroth element of the array of unique strings is intentionally blank.
    * @private
    */
-  public function diff_linesToChars_(text1:SString, text2:SString):LinesToCharsObj {
-    var lineArray:Array<SString> = [];  // e.g. lineArray[4] == 'Hello\n'
+  public function diff_linesToChars_(text1:UString, text2:UString):LinesToCharsObj {
+    var lineArray:Array<UString> = [];  // e.g. lineArray[4] == 'Hello\n'
     //NOTE(hx): line hash - from obj to something haxe specific (Map or Dynamic)
-    var lineHash = new Map<SString, Int>();   // e.g. lineHash['Hello\n'] == 4
+    var lineHash = new Map<UString, Int>();   // e.g. lineHash['Hello\n'] == 4
 
     // '\x00' is a valid character, but various debuggers don't like it.
     // So we'll insert a junk entry to avoid generating a null character.
@@ -518,10 +518,10 @@ class DiffMatchPatch {
      * @return {string} Encoded string.
      * @private
      */
-    function diff_linesToCharsMunge_(text:SString):SString {
+    function diff_linesToCharsMunge_(text:UString):UString {
       //NOTE(hx): use StringBuf instead of appending to chars
       var buf = new StringBuf();
-      var chars:SString = '';
+      var chars:UString = '';
       //NOTE(hx): refactored this, as Unifill.uSubstring is slow (because it has to recalc the offsets from start each time).
       //          So we accumulate a string until we hit a \n, use it, then reset it and restart the process.
       
@@ -532,7 +532,7 @@ class DiffMatchPatch {
       // Keeping our own length variable is faster than looking it up.
       var lineArrayLength = lineArray.length;
       var textLength = text.length;
-      var line:SString = '';
+      var line:UString = '';
       var i = 0;
       for (cp in text) {
         line += cp.toString();
@@ -554,8 +554,8 @@ class DiffMatchPatch {
       return buf.toString();
     }
 
-    var chars1:SString = diff_linesToCharsMunge_(text1);
-    var chars2:SString = diff_linesToCharsMunge_(text2);
+    var chars1:UString = diff_linesToCharsMunge_(text1);
+    var chars2:UString = diff_linesToCharsMunge_(text2);
     return {chars1: chars1, chars2: chars2, lineArray: lineArray};
   };
 
@@ -567,10 +567,10 @@ class DiffMatchPatch {
    * @param {!Array.<string>} lineArray Array of unique strings.
    * @private
    */
-  public function diff_charsToLines_(diffs:Diff, lineArray:Array<SString>) {
+  public function diff_charsToLines_(diffs:Diff, lineArray:Array<UString>) {
     //NOTE(hx): loops
     for (x in 0...diffs.length) {
-      var chars:SString = diffs[x][1];
+      var chars:UString = diffs[x][1];
       var text = [];
       //NOTE(hx): refactored to use codePointIterator
       //for (y in 0...chars.length) {
@@ -592,7 +592,7 @@ class DiffMatchPatch {
    * @return {number} The number of characters common to the start of each
    *     string.
    */
-  public function diff_commonPrefix(text1:SString, text2:SString):Int {
+  public function diff_commonPrefix(text1:UString, text2:UString):Int {
     // Quick check for common null cases.
     if (text1 == null || text2 == null || text1.charAt(0) != text2.charAt(0)) {
       return 0;
@@ -623,7 +623,7 @@ class DiffMatchPatch {
    * @param {string} text2 Second string.
    * @return {number} The number of characters common to the end of each string.
    */
-  public function diff_commonSuffix(text1:SString, text2:SString):Int {
+  public function diff_commonSuffix(text1:UString, text2:UString):Int {
     // Quick check for common null cases.
     //NOTE(hx): cache lengths
     var text1Length = text1.length;
@@ -685,7 +685,7 @@ class DiffMatchPatch {
    *     string and the start of the second string.
    * @private
    */
-  public function diff_commonOverlap_(text1:SString, text2:SString) {
+  public function diff_commonOverlap_(text1:UString, text2:UString) {
     // Cache the text lengths to prevent multiple calls.
     var text1_length = text1.length;
     var text2_length = text2.length;
@@ -737,7 +737,7 @@ class DiffMatchPatch {
    *     text2 and the common middle.  Or null if there was no match.
    * @private
    */
-  public function diff_halfMatch_(text1:SString, text2:SString):Array<SString> {
+  public function diff_halfMatch_(text1:UString, text2:UString):Array<UString> {
     if (this.Diff_Timeout <= 0) {
       // Don't risk returning a non-optimal diff if we have unlimited time.
       return null;
@@ -761,7 +761,7 @@ class DiffMatchPatch {
      *     of shorttext and the common middle.  Or null if there was no match.
      * @private
      */
-    function diff_halfMatchI_(longtext:SString, shorttext:SString, i) {
+    function diff_halfMatchI_(longtext:UString, shorttext:UString, i) {
       // Start with a 1/4 length substring at position i as a seed.
       var seed = longtext.substring(i, i + Math.floor(longtext.length / 4));
       var j = -1;
@@ -836,7 +836,7 @@ class DiffMatchPatch {
     var equalities = new Map<Int, Int>();  // Stack of indices where equalities are found.
     var equalitiesLength = 0;  // Keeping our own length var is faster in JS.
     /** @type {?string} */
-    var lastequality:SString = null;
+    var lastequality:UString = null;
     // Always equal to diffs[equalities[equalitiesLength - 1]][1]
     var pointer = 0;  // Index of current position.
     // Number of characters that changed prior to the equality.
@@ -955,7 +955,7 @@ class DiffMatchPatch {
      * @private
      */
     //NOTE(hx): regexes ahead!!
-    function diff_cleanupSemanticScore_(one:SString, two:SString) {
+    function diff_cleanupSemanticScore_(one:UString, two:UString) {
       if (one.isNullOrEmpty() || two.isNullOrEmpty()) {
         // Edges are the best.
         return 6;
@@ -1008,9 +1008,9 @@ class DiffMatchPatch {
       if (diffs[pointer - 1][0] == DIFF_EQUAL &&
           diffs[pointer + 1][0] == DIFF_EQUAL) {
         // This is a single edit surrounded by equalities.
-        var equality1:SString = diffs[pointer - 1][1];
-        var edit:SString = diffs[pointer][1];
-        var equality2:SString = diffs[pointer + 1][1];
+        var equality1:UString = diffs[pointer - 1][1];
+        var edit:UString = diffs[pointer][1];
+        var equality2:UString = diffs[pointer + 1][1];
 
         // First, shift the edit as far left as possible.
         var commonOffset:Int = this.diff_commonSuffix(equality1, edit);
@@ -1080,7 +1080,7 @@ class DiffMatchPatch {
     var equalities = [];  // Stack of indices where equalities are found.
     var equalitiesLength = 0;  // Keeping our own length var is faster in JS.
     /** @type {?string} */
-    var lastequality:SString = null;
+    var lastequality:UString = null;
     // Always equal to diffs[equalities[equalitiesLength - 1]][1]
     var pointer = 0;  // Index of current position.
     // Is there an insertion operation before the last equality.
@@ -1161,8 +1161,8 @@ class DiffMatchPatch {
     var pointer = 0;
     var count_delete = 0;
     var count_insert = 0;
-    var text_delete:SString = '';
-    var text_insert:SString = '';
+    var text_delete:UString = '';
+    var text_insert:UString = '';
     var commonlength;
     while (pointer < diffs.length) {
       switch (diffs[pointer][0]) {
@@ -1253,21 +1253,21 @@ class DiffMatchPatch {
       if (diffs[pointer - 1][0] == DIFF_EQUAL &&
           diffs[pointer + 1][0] == DIFF_EQUAL) {
         // This is a single edit surrounded by equalities.
-        if ((diffs[pointer][1] : SString).substring((diffs[pointer][1] : SString).length -
-            (diffs[pointer - 1][1] : SString).length) == diffs[pointer - 1][1]) {
+        if ((diffs[pointer][1] : UString).substring((diffs[pointer][1] : UString).length -
+            (diffs[pointer - 1][1] : UString).length) == diffs[pointer - 1][1]) {
           // Shift the edit over the previous equality.
           diffs[pointer][1] = diffs[pointer - 1][1] +
-              (diffs[pointer][1] : SString).substring(0, (diffs[pointer][1] : SString).length -
-                                          (diffs[pointer - 1][1] : SString).length);
+              (diffs[pointer][1] : UString).substring(0, (diffs[pointer][1] : UString).length -
+                                          (diffs[pointer - 1][1] : UString).length);
           diffs[pointer + 1][1] = diffs[pointer - 1][1] + diffs[pointer + 1][1];
           diffs.splice(pointer - 1, 1);
           changes = true;
-        } else if ((diffs[pointer][1] : SString).substring(0, diffs[pointer + 1][1].length) ==
+        } else if ((diffs[pointer][1] : UString).substring(0, diffs[pointer + 1][1].length) ==
             diffs[pointer + 1][1]) {
           // Shift the edit over the next equality.
           diffs[pointer - 1][1] += diffs[pointer + 1][1];
           diffs[pointer][1] =
-              (diffs[pointer][1] : SString).substring(diffs[pointer + 1][1].length) +
+              (diffs[pointer][1] : UString).substring(diffs[pointer + 1][1].length) +
               diffs[pointer + 1][1];
           diffs.splice(pointer + 1, 1);
           changes = true;
@@ -1336,9 +1336,9 @@ class DiffMatchPatch {
     //for (var x = 0; x < diffs.length; x++) {
     while (x < diffs.length) {
       var op = diffs[x][0];    // Operation (insert, delete, equal)
-      var data:SString = diffs[x][1];  // Text of change.
+      var data:UString = diffs[x][1];  // Text of change.
       //NOTE(hx): rearrange replace
-      var text:SString = pattern_amp.replace(data, '&amp;');
+      var text:UString = pattern_amp.replace(data, '&amp;');
       text = pattern_lt.replace(text, '&lt;');
       text = pattern_gt.replace(text, '&gt;');
       text = pattern_para.replace(text, '&para;<br>');
@@ -1365,7 +1365,7 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    * @return {string} Source text.
    */
-  public function diff_text1(diffs:Diff):SString {
+  public function diff_text1(diffs:Diff):UString {
     var text = [];
     for (x in 0...diffs.length) {
       if (diffs[x][0] != DIFF_INSERT) {
@@ -1383,7 +1383,7 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.Diff>} diffs Array of diff tuples.
    * @return {string} Destination text.
    */
-  public function diff_text2(diffs:Diff):SString {
+  public function diff_text2(diffs:Diff):UString {
     var text = [];
     for (x in 0...diffs.length) {
       if (diffs[x][0] != DIFF_DELETE) {
@@ -1408,7 +1408,7 @@ class DiffMatchPatch {
     var deletions = 0;
     for (x in 0...diffs.length) {
       var op = diffs[x][0];
-      var data:SString = diffs[x][1];
+      var data:UString = diffs[x][1];
       switch (op) {
         case DIFF_INSERT:
           insertions += data.length;
@@ -1445,10 +1445,10 @@ class DiffMatchPatch {
           text[x] = '+' + Internal.encodeURI((diffs[x][1])); //NOTE(hx): encodeURI -> urlEncode
           //break;
         case DIFF_DELETE:
-          text[x] = '-' + (diffs[x][1] : SString).length;
+          text[x] = '-' + (diffs[x][1] : UString).length;
           //break;
         case DIFF_EQUAL:
-          text[x] = '=' + (diffs[x][1] : SString).length;
+          text[x] = '=' + (diffs[x][1] : UString).length;
           //break;
       }
     }
@@ -1464,7 +1464,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.Diff>} Array of diff tuples.
    * @throws {!Error} If invalid input.
    */
-  public function diff_fromDelta(text1:SString, delta:SString):Diff {
+  public function diff_fromDelta(text1:UString, delta:UString):Diff {
     var diffs:Diff = [];
     var diffsLength = 0;  // Keeping our own length var is faster in JS.
     var pointer = 0;  // Cursor in text1
@@ -1525,7 +1525,7 @@ class DiffMatchPatch {
    * @param {number} loc The location to search around.
    * @return {number} Best match index or -1.
    */
-  public function match_main(text:SString, pattern:SString, ?loc:Int) {
+  public function match_main(text:UString, pattern:UString, ?loc:Int) {
     // Check for null inputs.
     if (text == null || pattern == null || loc == null) {
       throw new Error('Null input. (match_main)');
@@ -1557,7 +1557,7 @@ class DiffMatchPatch {
    * @return {number} Best match index or -1.
    * @private
    */
-  public function match_bitap_(text:SString, pattern:SString, loc:Int):Int {
+  public function match_bitap_(text:UString, pattern:UString, loc:Int):Int {
     if (pattern.length > this.Match_MaxBits) {
       throw new Error('Pattern too long for this browser.');
     }
@@ -1683,8 +1683,8 @@ class DiffMatchPatch {
    * @return {!Object} Hash of character locations.
    * @private
    */
-  public function match_alphabet_(pattern:SString) {
-    var s = new Map<SString, Int>(); //NOTE(hx): mmmhh... 
+  public function match_alphabet_(pattern:UString) {
+    var s = new Map<UString, Int>(); //NOTE(hx): mmmhh... 
     //NOTE(hx): refactored to use codePointIterator
     /*for (i in 0...pattern.length) {
       s[pattern.charAt(i)] = 0;
@@ -1715,7 +1715,7 @@ class DiffMatchPatch {
    * @param {string} text Source text.
    * @private
    */
-  public function patch_addContext_(patch:PatchObj, text:SString) {
+  public function patch_addContext_(patch:PatchObj, text:UString) {
     if (text.length == 0) {
       return;
     }
@@ -1736,12 +1736,12 @@ class DiffMatchPatch {
 
     //NOTE(hx): double check 2 casts below
     // Add the prefix.
-    var prefix:SString = text.substring(patch.start2 - padding, patch.start2);
+    var prefix:UString = text.substring(patch.start2 - padding, patch.start2);
     if (!Internal.isNullOrEmpty(prefix)) {
       patch.diffs.unshift(new SingleDiff(DIFF_EQUAL, prefix));
     }
     // Add the suffix.
-    var suffix:SString = text.substring(patch.start2 + patch.length1,
+    var suffix:UString = text.substring(patch.start2 + patch.length1,
                                 patch.start2 + patch.length1 + padding);
     if (!Internal.isNullOrEmpty(suffix)) {
       patch.diffs.push(new SingleDiff(DIFF_EQUAL, suffix));
@@ -1781,13 +1781,13 @@ class DiffMatchPatch {
   //NOTE(hx): this is a bit problematic (either types / casts)
   //          Also note that the haxe compiler could swap out opt_b with opt_c when one it's specified but the other is not!
   public function patch_make(a:Dynamic, ?opt_b:Dynamic, ?opt_c:Dynamic) {
-    var text1:SString, diffs:Diff;
+    var text1:UString, diffs:Diff;
     if (Std.is(a, String) && Std.is(opt_b, String) &&
         opt_c == null) {
       // Method 1: text1, text2
       // Compute diffs from text1 and text2.
       text1 = /** @type {string} */(cast a);
-      diffs = this.diff_main(text1, /** @type {string} */(opt_b : SString), true);
+      diffs = this.diff_main(text1, /** @type {string} */(opt_b : UString), true);
       if (diffs.length > 2) {
         this.diff_cleanupSemantic(diffs);
         this.diff_cleanupEfficiency(diffs);
@@ -1825,11 +1825,11 @@ class DiffMatchPatch {
     // Start with text1 (prepatch_text) and apply the diffs until we arrive at
     // text2 (postpatch_text).  We recreate the patches one by one to determine
     // context info.
-    var prepatch_text:SString = text1;
-    var postpatch_text:SString = text1;
+    var prepatch_text:UString = text1;
+    var postpatch_text:UString = text1;
     for (x in 0...diffs.length) {
       var diff_type = diffs[x][0];
-      var diff_text:SString = diffs[x][1];
+      var diff_text:UString = diffs[x][1];
 
       if (patchDiffLength == 0 && diff_type != DIFF_EQUAL) {
         // A new patch starts here.
@@ -1929,7 +1929,7 @@ class DiffMatchPatch {
    *      new text and an array of boolean values.
    */
   //NOTE(hx): introduce new type MergePatch (might need to rename it later)
-  public function patch_apply(patches:Array<PatchObj>, text:SString):MergePatch {
+  public function patch_apply(patches:Array<PatchObj>, text:UString):MergePatch {
     if (patches.length == 0) {
       return new MergePatch(text, []);
     }
@@ -1949,7 +1949,7 @@ class DiffMatchPatch {
     var results:Array<Bool> = [];
     for (x in 0...patches.length) {
       var expected_loc = patches[x].start2 + delta;
-      var text1:SString = this.diff_text1(patches[x].diffs);
+      var text1:UString = this.diff_text1(patches[x].diffs);
       var start_loc;
       var end_loc = -1;
       if (text1.length > this.Match_MaxBits) {
@@ -1978,7 +1978,7 @@ class DiffMatchPatch {
         // Found a match.  :)
         results[x] = true;
         delta = start_loc - expected_loc;
-        var text2:SString;
+        var text2:UString;
         if (end_loc == -1) {
           text2 = text.substring(start_loc, start_loc + text1.length);
         } else {
@@ -2035,12 +2035,12 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.patch_obj>} patches Array of Patch objects.
    * @return {string} The padding string added to each side.
    */
-  public function patch_addPadding(patches:Array<PatchObj>):SString {
+  public function patch_addPadding(patches:Array<PatchObj>):UString {
     var paddingLength = this.Patch_Margin;
-    var nullPadding:SString = '';
+    var nullPadding:UString = '';
     //NOTE(hx): <= in loop
     for (x in 1...paddingLength + 1) {
-      nullPadding += SString.fromCharCode(x);
+      nullPadding += UString.fromCharCode(x);
     }
 
     // Bump all the patches forward.
@@ -2061,7 +2061,7 @@ class DiffMatchPatch {
       patch.length2 += paddingLength;
     } else if (paddingLength > diffs[0][1].length) {
       // Grow first equality.
-      var extraLength:Int = paddingLength - (diffs[0][1] : SString).length; //NOTE(hx): typing as string
+      var extraLength:Int = paddingLength - (diffs[0][1] : UString).length; //NOTE(hx): typing as string
       diffs[0][1] = nullPadding.substring(diffs[0][1].length) + diffs[0][1];
       patch.start1 -= extraLength;
       patch.start2 -= extraLength;
@@ -2079,7 +2079,7 @@ class DiffMatchPatch {
       patch.length2 += paddingLength;
     } else if (paddingLength > diffs[diffs.length - 1][1].length) {
       // Grow last equality.
-      var extraLength = paddingLength - (diffs[diffs.length - 1][1] : SString).length; //NOTE(hx): typing as string
+      var extraLength = paddingLength - (diffs[diffs.length - 1][1] : UString).length; //NOTE(hx): typing as string
       diffs[diffs.length - 1][1] += nullPadding.substring(0, extraLength);
       patch.length1 += extraLength;
       patch.length2 += extraLength;
@@ -2123,7 +2123,7 @@ class DiffMatchPatch {
         while (bigpatch.diffs.length != 0 &&
                patch.length1 < patch_size - this.Patch_Margin) {
           var diff_type = bigpatch.diffs[0][0];
-          var diff_text = (bigpatch.diffs[0][1] : SString); //NOTE(hx): forcing as SString
+          var diff_text = (bigpatch.diffs[0][1] : UString); //NOTE(hx): forcing as SString
           if (diff_type == DIFF_INSERT) {
             // Insertions are harmless.
             patch.length2 += diff_text.length;
@@ -2156,7 +2156,7 @@ class DiffMatchPatch {
               bigpatch.diffs.shift();
             } else {
               bigpatch.diffs[0][1] =
-                  (bigpatch.diffs[0][1] : SString).substring(diff_text.length);
+                  (bigpatch.diffs[0][1] : UString).substring(diff_text.length);
             }
           }
         }
@@ -2192,7 +2192,7 @@ class DiffMatchPatch {
    * @param {!Array.<!diff_match_patch.patch_obj>} patches Array of Patch objects.
    * @return {string} Text representation of patches.
    */
-  public function patch_toText(patches:Array<PatchObj>):SString {
+  public function patch_toText(patches:Array<PatchObj>):UString {
     var text = [];
     for (x in 0...patches.length) {
       text[x] = patches[x];
@@ -2207,7 +2207,7 @@ class DiffMatchPatch {
    * @return {!Array.<!diff_match_patch.patch_obj>} Array of Patch objects.
    * @throws {!Error} If invalid input.
    */
-  public function patch_fromText(textline:SString):Array<PatchObj> {
+  public function patch_fromText(textline:UString):Array<PatchObj> {
     var patches = [];
     if (textline.isNullOrEmpty()) {
       return patches;
@@ -2378,19 +2378,19 @@ abstract Diff(Array<SingleDiff>) from Array<SingleDiff> to Array<SingleDiff> {
 @:native("SingleDiff")
 @:forward
 abstract SingleDiff(SingleDiffData) from SingleDiffData {
-  public function new(op:DiffOp, text:SString) {
+  public function new(op:DiffOp, text:UString) {
     this = new SingleDiffData(op, text);
   }
   
   @:arrayAccess function get(idx:Int):Dynamic {
     if (idx == 0) return (this.op : DiffOp);
-    if (idx == 1) return (this.text : SString);
+    if (idx == 1) return (this.text : UString);
     throw "invalid idx"; 
   }
   
   @:arrayAccess function set(idx:Int, value:Dynamic):Dynamic {
     if (idx == 0) return ((this.op = value) : DiffOp);
-    if (idx == 1) return ((this.text = value) : SString);
+    if (idx == 1) return ((this.text = value) : UString);
     throw "invalid idx"; 
   }
   
@@ -2413,9 +2413,9 @@ abstract SingleDiff(SingleDiffData) from SingleDiffData {
 @:structInit
 class SingleDiffData {
   public var op:DiffOp;
-  public var text:SString;
+  public var text:UString;
   
-  public function new(op:DiffOp, text:SString):Void {
+  public function new(op:DiffOp, text:UString):Void {
   #if debug
     switch (op) {
       case DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT:
@@ -2443,9 +2443,9 @@ class SingleDiffData {
 
 
 typedef LinesToCharsObj = {
-  var chars1:SString;
-  var chars2:SString;
-  var lineArray:Array<SString>;
+  var chars1:UString;
+  var chars2:UString;
+  var lineArray:Array<UString>;
 }
 
 
@@ -2453,13 +2453,13 @@ typedef LinesToCharsObj = {
 @:native("SString")
 @:forward
 @:forwardStatics
-abstract SString(String) from String to String {
+abstract UString(String) from String to String {
   inline public function new(s:String) {
     this = s;
   }
   
   @:op(A + B)
-  static function add(a:SString, b:String):SString {
+  static function add(a:UString, b:String):UString {
     /*var buf = new StringBuf();
     for (c in a.uIterator()) buf.uAddChar(c);
     for (c in b.uIterator()) buf.uAddChar(c);
@@ -2477,27 +2477,27 @@ abstract SString(String) from String to String {
     return Unifill.uLength(this);
   }
   
-  static public function fromCharCode(code:Int):SString {
+  inline static public function fromCharCode(code:Int):UString {
     return CodePoint.fromInt(code);
   }
   
-  public function substr(startIndex : Int, ?length : Int) : SString {
+  inline public function substr(startIndex : Int, ?length : Int) : UString {
     return Unifill.uSubstr(this, startIndex, length);
   }
   
-  public function substring(startIndex:Int, ?endIndex:Int):SString {
+  inline public function substring(startIndex:Int, ?endIndex:Int):UString {
     return Unifill.uSubstring(this, startIndex, endIndex);
   }
  
-  public function indexOf(value:SString, startIndex:Int = 0) {
+  inline public function indexOf(value:UString, startIndex:Int = 0) {
     return Unifill.uIndexOf(this, value, startIndex);
   }
   
-  public function split(delimiter:SString):Array<SString> {
+  inline public function split(delimiter:UString):Array<UString> {
     return Unifill.uSplit(this, delimiter);
   }
   
-  public function charAt(i:Int):SString {
+  public function charAt(i:Int):UString {
     //NOTE(hx): this is necessary for 'hitting end' test (involves diff_cleanupSemanticLossless), 
     //          as in js "".charAt(0) == "", while elsewhere results in an exception being thrown.
     //          Ooohh... you never stop learning: in js "123".charAt(-1) also equals "".
@@ -2507,11 +2507,11 @@ abstract SString(String) from String to String {
     return Unifill.uCharAt(this, i);
   }
   
-  public function charCodeAt(i:Int):Int {
+  inline public function charCodeAt(i:Int):Int {
     return Unifill.uCharCodeAt(this, i);
   }
   
-  public function iterator() : CodePointIter {
+  inline public function iterator() : CodePointIter {
     return Unifill.uIterator(this);
   }
 }
@@ -2531,7 +2531,7 @@ class Internal {
   //NOTE(hx): change here later
   static inline var NUMBER_MAX = 1.7976931348623157e+308;
   
-  inline static function isNullOrEmpty(s:SString) {
+  inline static function isNullOrEmpty(s:UString) {
     return s == null || s == '';
   }
   
@@ -2552,7 +2552,7 @@ class Internal {
   }
   
   @:noUsing
-  static public function encodeURI(s:SString):SString {
+  static public function encodeURI(s:UString):UString {
   #if (0)
     return untyped __js__('encodeURI({0})', s);
   #else
@@ -2574,7 +2574,7 @@ class Internal {
    * @param str The string to escape.
    * @return The escaped string.
    */
-  static function encodeURICompat(s:SString):SString {
+  static function encodeURICompat(s:UString):UString {
     return s.replace("%21", "!").replace("%7E", "~")
             .replace("%27", "'").replace("%28", "(").replace("%29", ")")
             .replace("%3B", ";").replace("%2F", "/").replace("%3F", "?")
@@ -2586,7 +2586,7 @@ class Internal {
   }
   
   @:noUsing
-  static public function decodeURI(s:SString):SString {
+  static public function decodeURI(s:UString):UString {
   #if (0)
     return untyped __js__('decodeURI({0})', s);
   #else
@@ -2626,7 +2626,7 @@ abstract NullIntArray(Array<Null<Int>>) from Array<Null<Int>> {
 @:forward
 abstract MergePatch(MergePatchData) from MergePatchData {
   
-  inline public function new(newText:SString, boolValues:Array<Bool>):Void {
+  inline public function new(newText:UString, boolValues:Array<Bool>):Void {
     this = new MergePatchData(newText, boolValues);
   }
   
@@ -2645,10 +2645,10 @@ abstract MergePatch(MergePatchData) from MergePatchData {
 
 @:structInit
 class MergePatchData {
-  public var text:SString;
+  public var text:UString;
   public var boolValues:Array<Bool>;
   
-  public function new(newText:SString, boolValues:Array<Bool>):Void {
+  public function new(newText:UString, boolValues:Array<Bool>):Void {
     this.text = newText;
     this.boolValues = boolValues;
   }

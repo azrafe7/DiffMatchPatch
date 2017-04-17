@@ -70,14 +70,14 @@ class Helpers {
 
   static public function diff_rebuildtexts(diffs:Diff) {
     // Construct the two texts which made up the diff originally.
-    var text1 = '';
-    var text2 = '';
+    var text1:UString = '';
+    var text2:UString = '';
     for (x in 0...diffs.length) {
-      if (diffs[x][0] != DIFF_INSERT) {
-        text1 += diffs[x][1];
+      if (diffs[x].op != DIFF_INSERT) {
+        text1 += diffs[x].text;
       }
-      if (diffs[x][0] != DIFF_DELETE) {
-        text2 += diffs[x][1];
+      if (diffs[x].op != DIFF_DELETE) {
+        text2 += diffs[x].text;
       }
     }
     return [text1, text2];

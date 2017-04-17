@@ -339,20 +339,22 @@ class DiffMatchPatch {
     // Cache the text lengths to prevent multiple calls.
     var text1_length = text1.length;
     var text2_length = text2.length;
+    var text1_array = text1.split('');
+    var text2_array = text2.split('');
     var max_d = Math.ceil((text1_length + text2_length) / 2);
     var v_offset = max_d;
     var v_length = 2 * max_d;
     //NOTE(hx): new fixed array (with nullable values)
-    var v1:NullIntArray = [for (i in 0...v_length) null];
-    var v2:NullIntArray = [for (i in 0...v_length) null];
+    var v1:NullIntArray = [for (i in 0...v_length) -1];
+    var v2:NullIntArray = [for (i in 0...v_length) -1];
     // Setting all elements to -1 is faster in Chrome & Firefox than mixing
     // integers and undefined.
-    var x = 0;
+    /*var x = 0;
     while (x < v_length) {
       v1[x] = -1;
       v2[x] = -1;
       x++;
-    }
+    }*/
     v1[v_offset + 1] = 0;
     v2[v_offset + 1] = 0;
     var delta = text1_length - text2_length;
@@ -387,7 +389,7 @@ class DiffMatchPatch {
         }
         var y1 = x1 - k1;
         while (x1 < text1_length && y1 < text2_length &&
-               text1.charAt(x1) == text2.charAt(y1)) {
+               text1_array[(x1)] == text2_array[(y1)]) {
           x1++;
           y1++;
         }
@@ -426,8 +428,8 @@ class DiffMatchPatch {
         }
         var y2 = x2 - k2;
         while (x2 < text1_length && y2 < text2_length &&
-               text1.charAt(text1_length - x2 - 1) ==
-               text2.charAt(text2_length - y2 - 1)) {
+               text1_array[(text1_length - x2 - 1)] ==
+               text2_array[(text2_length - y2 - 1)]) {
           x2++;
           y2++;
         }
@@ -626,9 +628,11 @@ class DiffMatchPatch {
     //NOTE(hx): cache lengths
     var text1Length = text1.length;
     var text2Length = text2.length;
+    var text1_array:Array<CodePoint> = [for (cp in text1) cp];
+    var text2_array:Array<CodePoint>  = [for (cp in text2) cp];
     //NOTE(hx): check falsey
     if (text1 == null || text2 == null ||
-        text1.charAt(text1Length - 1) != text2.charAt(text2Length - 1)) {
+        text1_array[(text1Length - 1)] != text2_array[(text2Length - 1)]) {
       return 0;
     }
     // Binary search.
@@ -637,9 +641,31 @@ class DiffMatchPatch {
     var pointermax = Std.int(Math.min(text1Length, text2Length));
     var pointermid = pointermax;
     var pointerend = 0;
+    
+    function comp(a:Array<CodePoint>, startA:Int, endA:Int, b:Array<CodePoint>, startB:Int, endB:Int):Int {
+      var i = startA;
+      var j = startB;
+      while (i < endA && j < endB) {
+        if (a[i] < b[j])
+          return -1;
+        if (a[i] > b[j])
+          return 1;
+          
+        i++;
+        j++;
+      }
+      if (j < endB)
+        return -1;
+      if (i < endA)
+        return 1;
+      return 0;
+    };
+    
     while (pointermin < pointermid) {
-      if (text1.substring(text1Length - pointermid, text1Length - pointerend) ==
-          text2.substring(text2Length - pointermid, text2Length - pointerend)) {
+      /*if (text1.substring(text1Length - pointermid, text1Length - pointerend) ==
+          text2.substring(text2Length - pointermid, text2Length - pointerend)) {*/
+      if (comp(text1_array, text1Length - pointermid, text1Length - pointerend,
+               text2_array, text2Length - pointermid, text2Length - pointerend) == 0) {
         pointermin = pointermid;
         pointerend = pointermin;
       } else {

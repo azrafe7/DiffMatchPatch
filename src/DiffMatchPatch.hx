@@ -2430,15 +2430,22 @@ class SingleDiffData {
 }
 
 
-typedef LinesToCharsObj = {
-  var chars1:UString;
-  var chars2:UString;
-  var lineArray:Array<UString>;
+@:structInit
+class LinesToCharsObj {
+  public var chars1:UString;
+  public var chars2:UString;
+  public var lineArray:Array<UString>;
+  
+  public function new(chars1:UString, chars2:UString, lineArray:Array<UString>) {
+    this.chars1 = chars1;
+    this.chars2 = chars2;
+    this.lineArray = lineArray;
+  }
 }
 
 
 
-@:native("SString")
+@:native("UString")
 @:forward
 @:forwardStatics
 abstract UString(String) from String to String {
@@ -2447,7 +2454,7 @@ abstract UString(String) from String to String {
   }
   
   @:op(A + B)
-  static function add(a:UString, b:String):UString {
+  inline static function add(a:UString, b:String):UString {
     /*var buf = new StringBuf();
     for (c in a.uIterator()) buf.uAddChar(c);
     for (c in b.uIterator()) buf.uAddChar(c);
@@ -2455,12 +2462,12 @@ abstract UString(String) from String to String {
     return (a : String) + b;
   }
   
-  public function toString() {
+  inline public function toString() {
     return (this : String);
   }
   
   public var length(get, never):Int;
-  function get_length():Int {
+  inline function get_length():Int {
     //trace("len " + this.length + "/" + Unifill.uLength(this));
     return Unifill.uLength(this);
   }
@@ -2499,7 +2506,7 @@ abstract UString(String) from String to String {
     return Unifill.uCharCodeAt(this, i);
   }
   
-  public function iterator() : CodePointIter {
+  inline public function iterator() : CodePointIter {
     return Unifill.uIterator(this);
   }
 }

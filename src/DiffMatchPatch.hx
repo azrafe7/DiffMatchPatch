@@ -344,17 +344,17 @@ class DiffMatchPatch {
     var max_d = Math.ceil((text1_length + text2_length) / 2);
     var v_offset = max_d;
     var v_length = 2 * max_d;
-    //NOTE(hx): new fixed array (with nullable values)
-    var v1:NullIntArray = [for (i in 0...v_length) -1];
-    var v2:NullIntArray = [for (i in 0...v_length) -1];
+    //NOTE(hx): new fixed array
+    var v1:NullIntArray = new NullIntArray(v_length);// [for (i in 0...v_length) -1];
+    var v2:NullIntArray = new NullIntArray(v_length);// [for (i in 0...v_length) -1];
     // Setting all elements to -1 is faster in Chrome & Firefox than mixing
     // integers and undefined.
-    /*var x = 0;
+    var x = 0;
     while (x < v_length) {
       v1[x] = -1;
       v2[x] = -1;
       x++;
-    }*/
+    }
     v1[v_offset + 1] = 0;
     v2[v_offset + 1] = 0;
     var delta = text1_length - text2_length;
@@ -1628,7 +1628,7 @@ class DiffMatchPatch {
       var start = Std.int(Math.max(1, loc - bin_mid + 1));
       var finish = Std.int(Math.min(loc + bin_mid, textLength)) + pattern.length;
 
-      var rd:NullIntArray = [for (i in 0...finish + 2) 0]; //NOTE(hx): init array by length
+      var rd:NullIntArray = new NullIntArray(finish + 2); for (i in 0...finish + 2) rd[i] = 0; //NOTE(hx): init array by length
       rd[finish + 1] = (1 << d) - 1;
       var j = finish;
       //for (var j = finish; j >= start; j--) {
@@ -2588,7 +2588,7 @@ class Internal {
 }
 
 
-typedef NullIntArray = Array<Int>;
+typedef NullIntArray = haxe.ds.Vector<Int>;
 /*@:forward
 abstract NullIntArray(Array<Null<Int>>) from Array<Null<Int>> {
   

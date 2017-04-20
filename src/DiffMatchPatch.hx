@@ -489,7 +489,9 @@ class DiffMatchPatch {
     var diffs = this.diff_main(text1a, text2a, false, deadline);
     var diffsb = this.diff_main(text1b, text2b, false, deadline);
 
-    return diffs.concat(diffsb);
+    //NOTE(hx): push instead of concat
+    for (sDiff in diffsb) diffs.push(sDiff);
+    return diffs;
   };
 
 

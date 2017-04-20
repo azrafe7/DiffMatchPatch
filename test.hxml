@@ -4,5 +4,5 @@
 -lib unifill
 -lib utest
 -lib buddy
--debug
+#-debug
 #-neko bin\testall.n

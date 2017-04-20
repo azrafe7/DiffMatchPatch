@@ -67,7 +67,7 @@ class TestAll implements Buddy < [
   
   #if sys
     trace("PRESS PLAY ON TAPE...");
-    Sys.stdin().readLine();
+    //Sys.stdin().readLine();
   #end
   }
 }
@@ -676,7 +676,7 @@ class TestDiff extends BuddySuite {
       });
 
       timeoutMs = 10000;
-      xit('Timeout.', {
+      it('Timeout.', {
         // PENDING (should pass, but might take some time)
         
         dmp.Diff_Timeout = 0.1;  // 100ms

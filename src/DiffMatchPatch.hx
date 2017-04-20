@@ -477,10 +477,13 @@ class DiffMatchPatch {
    * @private
    */
   function diff_bisectSplit_(text1:UString, text2:UString, x:Int, y:Int, deadline) {
-    var text1a = text1.substring(0, x);
-    var text2a = text2.substring(0, y);
-    var text1b = text1.substring(x);
-    var text2b = text2.substring(y);
+    //NOTE(hx): use Unifill.InternalEncoding instead of substring to have a little speed up (calc offsets once)
+    var xOffset = InternalEncoding.offsetByCodePoints((text1 : String), 0, x);
+    var yOffset = InternalEncoding.offsetByCodePoints((text2 : String), 0, y);
+    var text1a:UString = (text1 : String).substring(0, xOffset);
+    var text2a:UString = (text2 : String).substring(0, yOffset);
+    var text1b:UString = (text1 : String).substring(xOffset);
+    var text2b:UString = (text2 : String).substring(yOffset);
 
     // Compute both diffs serially.
     var diffs = this.diff_main(text1a, text2a, false, deadline);
